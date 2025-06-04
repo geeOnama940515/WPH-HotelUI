@@ -7,6 +7,7 @@ import Rooms from './pages/Rooms/Rooms';
 import Booking from './pages/Booking/Booking';
 import Auth from './pages/Auth/Auth';
 import Admin from './pages/Admin/Admin';
+import MyBookings from './pages/MyBookings/MyBookings';
 import { AuthProvider } from './context/AuthContext';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
               <Route path="/booking" element={<Booking />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/my-bookings" element={<MyBookings />} />
             </Routes>
           </main>
           <Footer />
@@ -30,5 +32,3 @@ function App() {
     </AuthProvider>
   );
 }
-
-export default App;

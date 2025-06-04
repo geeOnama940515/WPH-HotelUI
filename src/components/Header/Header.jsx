@@ -14,10 +14,10 @@ function Header() {
           <div className="flex space-x-6">
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/rooms" className="nav-link">Rooms</Link>
-            <Link to="/booking" className="nav-link">Book Now</Link>
             {user ? (
               <>
-                {user.isAdmin && <Link to="/admin\" className="nav-link">Admin</Link>}
+                <Link to="/my-bookings" className="nav-link">My Bookings</Link>
+                {user.isAdmin && <Link to="/admin" className="nav-link">Admin</Link>}
                 <button onClick={logout} className="nav-link">Logout</button>
               </>
             ) : (
@@ -29,5 +29,3 @@ function Header() {
     </header>
   );
 }
-
-export default Header;
