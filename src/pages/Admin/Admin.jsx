@@ -1,13 +1,37 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import RoomForm from '../../components/RoomForm/RoomForm';
 
 function Admin() {
   const [activeTab, setActiveTab] = useState('bookings');
+  const [showRoomForm, setShowRoomForm] = useState(false);
+  const [editingRoom, setEditingRoom] = useState(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
   // Dummy data for demonstration
+  const [rooms, setRooms] = useState([
+    {
+      id: 1,
+      name: "Deluxe King Room",
+      description: "Spacious room with king-size bed and city view",
+      price: 9950,
+      capacity: 2,
+      status: "available",
+      image: "https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg"
+    },
+    {
+      id: 2,
+      name: "Executive Suite",
+      description: "Luxury suite with separate living area",
+      price: 14950,
+      capacity: 3,
+      status: "occupied",
+      image: "https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg"
+    }
+  ]);
+
   const bookings = [
     {
       id: 1,
@@ -29,23 +53,6 @@ function Admin() {
     }
   ];
 
-  const rooms = [
-    {
-      id: 1,
-      name: "Deluxe King Room",
-      price: 9950,
-      capacity: 2,
-      status: "available"
-    },
-    {
-      id: 2,
-      name: "Executive Suite",
-      price: 14950,
-      capacity: 3,
-      status: "occupied"
-    }
-  ];
-
   React.useEffect(() => {
     if (!user?.isAdmin) {
       navigate('/');
@@ -58,8 +65,37 @@ function Admin() {
   };
 
   const handleRoomStatusChange = (roomId, newStatus) => {
-    // Here you would update the room status in your backend
-    console.log(`Updating room ${roomId} status to ${newStatus}`);
+    setRooms(rooms.map(room => 
+      room.id === roomId ? { ...room, status: newStatus } : room
+    ));
+  };
+
+  const handleAddRoom = (roomData) => {
+    const newRoom = {
+      id: rooms.length + 1,
+      ...roomData
+    };
+    setRooms([...rooms, newRoom]);
+    setShowRoomForm(false);
+  };
+
+  const handleEditRoom = (room) => {
+    setEditingRoom(room);
+    setShowRoomForm(true);
+  };
+
+  const handleUpdateRoom = (roomData) => {
+    setRooms(rooms.map(room => 
+      room.id === editingRoom.id ? { ...roomData, id: room.id } : room
+    ));
+    setShowRoomForm(false);
+    setEditingRoom(null);
+  };
+
+  const handleDeleteRoom = (roomId) => {
+    if (window.confirm('Are you sure you want to delete this room?')) {
+      setRooms(rooms.filter(room => room.id !== roomId));
+    }
   };
 
   return (
@@ -140,46 +176,86 @@ function Admin() {
         </div>
       )}
 
-      {activeTab === 'rooms' && (
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {rooms.map((room) => (
-                <tr key={room.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">{room.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">₱{room.price.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{room.capacity} guests</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      room.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {room.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <select
-                      onChange={(e) => handleRoomStatusChange(room.id, e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      defaultValue={room.status}
-                    >
-                      <option value="available">Available</option>
-                      <option value="occupied">Occupied</option>
-                      <option value="maintenance">Maintenance</option>
-                    </select>
-                  </td>
+      {activeTab === 'rooms' && !showRoomForm && (
+        <div>
+          <div className="mb-4">
+            <button
+              onClick={() => {
+                setEditingRoom(null);
+                setShowRoomForm(true);
+              }}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+            >
+              Add New Room
+            </button>
+          </div>
+          <div className="bg-white shadow-md rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {rooms.map((room) => (
+                  <tr key={room.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">{room.name}</td>
+                    <td className="px-6 py-4">{room.description}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">₱{room.price.toLocaleString()}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{room.capacity} guests</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <select
+                        onChange={(e) => handleRoomStatusChange(room.id, e.target.value)}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        value={room.status}
+                      >
+                        <option value="available">Available</option>
+                        <option value="occupied">Occupied</option>
+                        <option value="maintenance">Maintenance</option>
+                      </select>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEditRoom(room)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteRoom(room.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'rooms' && showRoomForm && (
+        <div className="bg-white shadow-md rounded-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">
+            {editingRoom ? 'Edit Room' : 'Add New Room'}
+          </h2>
+          <RoomForm
+            room={editingRoom}
+            onSubmit={editingRoom ? handleUpdateRoom : handleAddRoom}
+            onCancel={() => {
+              setShowRoomForm(false);
+              setEditingRoom(null);
+            }}
+          />
         </div>
       )}
     </div>
