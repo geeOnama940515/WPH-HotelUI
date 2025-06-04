@@ -10,7 +10,13 @@ function Header() {
     <header className="bg-white shadow-md">
       <nav className="container mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
-          <Link to="/" className="text-2xl font-bold text-gray-800">WPH Hotel</Link>
+          <Link to="/" className="flex items-center">
+            <img 
+              src="/ChatGPT Image Jun 4, 2025, 02_33_57 PM.png" 
+              alt="WPH Hotel" 
+              className="h-12"
+            />
+          </Link>
           <div className="flex space-x-6">
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/rooms" className="nav-link">Rooms</Link>
