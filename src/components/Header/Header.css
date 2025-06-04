@@ -2,8 +2,21 @@
   color: #4a5568;
   font-weight: 500;
   transition: color 0.2s;
+  padding: 0.5rem;
+  display: block;
 }
 
 .nav-link:hover {
   color: #2d3748;
+}
+
+@media (max-width: 768px) {
+  .nav-link {
+    padding: 0.75rem;
+    border-bottom: 1px solid #edf2f7;
+  }
+  
+  .nav-link:last-child {
+    border-bottom: none;
+  }
 }

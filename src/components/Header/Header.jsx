@@ -1,10 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './Header.css';
 
 function Header() {
   const { user, logout } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
   return (
     <header className="bg-white shadow-md">
@@ -18,7 +23,19 @@ function Header() {
             />
             <span className="text-2xl font-bold text-gray-800">WPH - HOTEL</span>
           </Link>
-          <div className="flex space-x-6">
+
+          {/* Hamburger menu button */}
+          <button
+            onClick={toggleMenu}
+            className="md:hidden p-2 rounded-md hover:bg-gray-100 focus:outline-none"
+          >
+            <div className="w-6 h-0.5 bg-gray-600 mb-1"></div>
+            <div className="w-6 h-0.5 bg-gray-600 mb-1"></div>
+            <div className="w-6 h-0.5 bg-gray-600"></div>
+          </button>
+
+          {/* Desktop menu */}
+          <div className="hidden md:flex space-x-6">
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/rooms" className="nav-link">Rooms</Link>
             {user ? (
@@ -29,6 +46,23 @@ function Header() {
               </>
             ) : (
               <Link to="/auth" className="nav-link">Login</Link>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile menu */}
+        <div className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'} pt-4`}>
+          <div className="flex flex-col space-y-4">
+            <Link to="/" className="nav-link" onClick={() => setIsMenuOpen(false)}>Home</Link>
+            <Link to="/rooms" className="nav-link" onClick={() => setIsMenuOpen(false)}>Rooms</Link>
+            {user ? (
+              <>
+                <Link to="/my-bookings" className="nav-link" onClick={() => setIsMenuOpen(false)}>My Bookings</Link>
+                {user.isAdmin && <Link to="/admin" className="nav-link" onClick={() => setIsMenuOpen(false)}>Admin</Link>}
+                <button onClick={() => { logout(); setIsMenuOpen(false); }} className="nav-link text-left">Logout</button>
+              </>
+            ) : (
+              <Link to="/auth" className="nav-link" onClick={() => setIsMenuOpen(false)}>Login</Link>
             )}
           </div>
         </div>
