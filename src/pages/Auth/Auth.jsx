@@ -31,6 +31,23 @@ function Auth() {
           {isLogin ? 'Login' : 'Register'}
         </h1>
         
+        {/* Demo Credentials */}
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          <h2 className="text-lg font-semibold mb-2">Demo Credentials</h2>
+          <div className="space-y-2">
+            <div>
+              <p className="font-medium">Admin Account:</p>
+              <p className="text-sm text-gray-600">Email: admin@wphhotel.com</p>
+              <p className="text-sm text-gray-600">Password: Admin123!</p>
+            </div>
+            <div>
+              <p className="font-medium">User Account:</p>
+              <p className="text-sm text-gray-600">Email: user@example.com</p>
+              <p className="text-sm text-gray-600">Password: User123!</p>
+            </div>
+          </div>
+        </div>
+        
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
