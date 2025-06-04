@@ -52,3 +52,5 @@ function MyBookings() {
     </div>
   );
 }
+
+export default MyBookings
