@@ -10,12 +10,13 @@ function Header() {
     <header className="bg-white shadow-md">
       <nav className="container mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
-          <Link to="/" className="flex items-center">
+          <Link to="/" className="flex items-center space-x-2">
             <img 
               src="/ChatGPT Image Jun 4, 2025, 02_33_57 PM.png" 
-              alt="WPH Hotel" 
+              alt="WPH Hotel Logo" 
               className="h-12"
             />
+            <span className="text-2xl font-bold text-gray-800">WPH - HOTEL</span>
           </Link>
           <div className="flex space-x-6">
             <Link to="/" className="nav-link">Home</Link>
@@ -36,4 +37,4 @@ function Header() {
   );
 }
 
-export default Header
+export default Header;
