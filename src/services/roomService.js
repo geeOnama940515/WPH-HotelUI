@@ -1,39 +1,9 @@
-import supabase from './api';
+import { api } from './api';
 
-export const getRooms = async () => {
-  const { data, error } = await supabase
-    .from('rooms')
-    .select('*');
+export const getRooms = () => api.get('/rooms');
 
-  if (error) throw error;
-  return data;
-};
+export const createRoom = (roomData) => api.post('/rooms', roomData);
 
-export const createRoom = async (roomData) => {
-  const { data, error } = await supabase
-    .from('rooms')
-    .insert([roomData]);
+export const updateRoom = (roomId, roomData) => api.put(`/rooms/${roomId}`, roomData);
 
-  if (error) throw error;
-  return data;
-};
-
-export const updateRoom = async (roomId, roomData) => {
-  const { data, error } = await supabase
-    .from('rooms')
-    .update(roomData)
-    .eq('id', roomId);
-
-  if (error) throw error;
-  return data;
-};
-
-export const deleteRoom = async (roomId) => {
-  const { error } = await supabase
-    .from('rooms')
-    .delete()
-    .eq('id', roomId);
-
-  if (error) throw error;
-  return true;
-};
+export const deleteRoom = (roomId) => api.delete(`/rooms/${roomId}`);

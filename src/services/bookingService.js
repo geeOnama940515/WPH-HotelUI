@@ -1,55 +1,10 @@
-import supabase from './api';
+import { api } from './api';
 
-export const createBooking = async (bookingData) => {
-  const { data, error } = await supabase
-    .from('bookings')
-    .insert([bookingData]);
+export const createBooking = (bookingData) => api.post('/bookings', bookingData);
 
-  if (error) throw error;
-  return data;
-};
+export const getUserBookings = () => api.get('/bookings/user');
 
-export const getUserBookings = async (userId) => {
-  const { data, error } = await supabase
-    .from('bookings')
-    .select(`
-      *,
-      rooms (
-        name,
-        price
-      )
-    `)
-    .eq('user_id', userId);
+export const updateBookingStatus = (bookingId, status) => 
+  api.put(`/bookings/${bookingId}/status`, { status });
 
-  if (error) throw error;
-  return data;
-};
-
-export const updateBookingStatus = async (bookingId, status) => {
-  const { data, error } = await supabase
-    .from('bookings')
-    .update({ status })
-    .eq('id', bookingId);
-
-  if (error) throw error;
-  return data;
-};
-
-export const getAllBookings = async () => {
-  const { data, error } = await supabase
-    .from('bookings')
-    .select(`
-      *,
-      rooms (
-        name,
-        price
-      ),
-      profiles (
-        full_name,
-        email
-      )
-    `);
-
-  if (error) throw error;
-  return data;
-};
+export const getAllBookings = () => api.get('/bookings');

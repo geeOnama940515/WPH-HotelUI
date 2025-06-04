@@ -1,27 +1,5 @@
-import supabase from './api';
+import { api } from './api';
 
-export const updateProfile = async (userId, profileData) => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .upsert([
-      {
-        id: userId,
-        ...profileData,
-        updated_at: new Date()
-      }
-    ]);
+export const updateProfile = (profileData) => api.put('/profile', profileData);
 
-  if (error) throw error;
-  return data;
-};
-
-export const getProfile = async (userId) => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-
-  if (error) throw error;
-  return data;
-};
+export const getProfile = () => api.get('/profile');
