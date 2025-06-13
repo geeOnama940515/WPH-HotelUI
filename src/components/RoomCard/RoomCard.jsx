@@ -29,3 +29,5 @@ function RoomCard({ room }) {
     </div>
   );
 }
+
+export default RoomCard
