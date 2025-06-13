@@ -35,24 +35,20 @@ function Header() {
           </button>
 
           {/* Desktop menu */}
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/rooms" className="nav-link">Rooms</Link>
             <Link to="/rooms" className="nav-link">Book Now</Link>
             <Link to="/contact" className="nav-link">Contact</Link>
             
-            {/* User menu - shown as dropdown or separate section */}
-            <div className="flex items-center space-x-4 ml-6 pl-6 border-l border-gray-200">
-              {user ? (
-                <>
-                  <Link to="/my-bookings" className="nav-link text-sm">My Bookings</Link>
-                  {user.isAdmin && <Link to="/admin" className="nav-link text-sm">Admin</Link>}
-                  <button onClick={logout} className="nav-link text-sm">Logout</button>
-                </>
-              ) : (
-                <Link to="/auth" className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Login</Link>
-              )}
-            </div>
+            {/* Admin section - only show if user is admin */}
+            {user?.isAdmin && (
+              <div className="flex items-center space-x-4 ml-6 pl-6 border-l border-gray-200">
+                <Link to="/my-bookings" className="nav-link text-sm">My Bookings</Link>
+                <Link to="/admin" className="nav-link text-sm">Admin</Link>
+                <button onClick={logout} className="nav-link text-sm">Logout</button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -64,18 +60,14 @@ function Header() {
             <Link to="/rooms" className="nav-link" onClick={() => setIsMenuOpen(false)}>Book Now</Link>
             <Link to="/contact" className="nav-link" onClick={() => setIsMenuOpen(false)}>Contact</Link>
             
-            {/* User menu for mobile */}
-            <div className="pt-4 border-t border-gray-200">
-              {user ? (
-                <>
-                  <Link to="/my-bookings" className="nav-link" onClick={() => setIsMenuOpen(false)}>My Bookings</Link>
-                  {user.isAdmin && <Link to="/admin" className="nav-link" onClick={() => setIsMenuOpen(false)}>Admin</Link>}
-                  <button onClick={() => { logout(); setIsMenuOpen(false); }} className="nav-link text-left">Logout</button>
-                </>
-              ) : (
-                <Link to="/auth" className="nav-link" onClick={() => setIsMenuOpen(false)}>Login</Link>
-              )}
-            </div>
+            {/* Admin menu for mobile */}
+            {user?.isAdmin && (
+              <div className="pt-4 border-t border-gray-200">
+                <Link to="/my-bookings" className="nav-link" onClick={() => setIsMenuOpen(false)}>My Bookings</Link>
+                <Link to="/admin" className="nav-link" onClick={() => setIsMenuOpen(false)}>Admin</Link>
+                <button onClick={() => { logout(); setIsMenuOpen(false); }} className="nav-link text-left">Logout</button>
+              </div>
+            )}
           </div>
         </div>
       </nav>

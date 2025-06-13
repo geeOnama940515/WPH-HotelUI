@@ -2,12 +2,19 @@ import { api } from './api';
 
 export const login = async (email, password) => {
   try {
-    const response = await api.post('/auth/login', { email, password });
-    if (response.token) {
-      localStorage.setItem('token', response.token);
-      return response.user;
+    // Simulate admin login check
+    if (email === 'admin@wphhotel.com' && password === 'Admin123!') {
+      const adminUser = {
+        id: '1',
+        email: 'admin@wphhotel.com',
+        name: 'Hotel Admin',
+        isAdmin: true
+      };
+      localStorage.setItem('token', 'admin-token');
+      return adminUser;
     }
-    throw new Error('Invalid response from server');
+    
+    throw new Error('Invalid admin credentials');
   } catch (error) {
     throw new Error(error.message || 'Login failed');
   }
@@ -35,13 +42,17 @@ export const getCurrentUser = () => {
   if (!token) return null;
   
   try {
-    // This is a temporary solution until the backend is ready
-    // Replace with actual token verification
-    return {
-      email: 'user@example.com',
-      name: 'Test User',
-      isAdmin: false
-    };
+    // Check if it's the admin token
+    if (token === 'admin-token') {
+      return {
+        id: '1',
+        email: 'admin@wphhotel.com',
+        name: 'Hotel Admin',
+        isAdmin: true
+      };
+    }
+    
+    return null;
   } catch (error) {
     localStorage.removeItem('token');
     return null;
