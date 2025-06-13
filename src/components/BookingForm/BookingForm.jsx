@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
-import { rooms } from '../data/roomsData';
+import { rooms } from '../../data/roomsData';
 
 function BookingForm({ selectedRoom, onSubmit }) {
   const [formData, setFormData] = useState({

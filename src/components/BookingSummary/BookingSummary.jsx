@@ -1,5 +1,5 @@
 import React from 'react';
-import { rooms } from '../data/roomsData';
+import { rooms } from '../../data/roomsData';
 
 function BookingSummary({ bookingData, onConfirm, onBack }) {
   const selectedRoom = rooms.find(room => room.id === parseInt(bookingData?.roomType));
