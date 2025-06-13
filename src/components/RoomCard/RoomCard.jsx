@@ -19,11 +19,10 @@ function RoomCard({ room }) {
           <span className="text-gray-500">Up to {capacity} guests</span>
         </div>
         <Link 
-          to={`/booking?room=${id}`}
-          state={{ selectedRoom: room }}
+          to={`/room-details/${id}`}
           className="block w-full bg-blue-600 text-white text-center py-2 rounded-md hover:bg-blue-700 transition-colors mt-auto"
         >
-          Book Now
+          View Details
         </Link>
       </div>
     </div>
