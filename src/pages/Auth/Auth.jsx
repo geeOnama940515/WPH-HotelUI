@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 function Auth() {
@@ -20,6 +20,10 @@ function Auth() {
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  const handleBackToWebsite = () => {
+    navigate('/');
   };
 
   return (
@@ -77,9 +81,12 @@ function Auth() {
         </form>
 
         <div className="mt-4 text-center">
-          <Link to="/" className="text-blue-600 hover:text-blue-800 text-sm">
+          <button 
+            onClick={handleBackToWebsite}
+            className="text-blue-600 hover:text-blue-800 text-sm"
+          >
             ← Back to Hotel Website
-          </Link>
+          </button>
         </div>
       </div>
     </div>
