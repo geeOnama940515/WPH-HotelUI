@@ -1,23 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import BookingForm from '../../components/BookingForm/BookingForm';
 import BookingSummary from '../../components/BookingSummary/BookingSummary';
 import { rooms } from '../../data/roomsData';
 
 function Booking() {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [bookingData, setBookingData] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const roomId = parseInt(searchParams.get('room'));
-    if (roomId) {
-      const room = rooms.find(r => r.id === roomId);
-      setSelectedRoom(room);
+    // First try to get room from location state (passed from RoomCard)
+    if (location.state?.selectedRoom) {
+      setSelectedRoom(location.state.selectedRoom);
+    } else {
+      // Fallback to URL parameter
+      const roomId = parseInt(searchParams.get('room'));
+      if (roomId) {
+        const room = rooms.find(r => r.id === roomId);
+        setSelectedRoom(room);
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, location.state]);
 
   const handleFormSubmit = (formData) => {
     setBookingData(formData);
@@ -116,10 +123,31 @@ function Booking() {
     }
   };
 
+  // Show message if no room is selected
+  if (!selectedRoom) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="bg-white p-8 rounded-lg shadow-md text-center">
+            <h1 className="text-2xl font-bold mb-4">No Room Selected</h1>
+            <p className="text-gray-600 mb-6">Please select a room from our rooms page to continue with your booking.</p>
+            <button
+              onClick={() => navigate('/rooms')}
+              className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors font-semibold"
+            >
+              Browse Rooms
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-center mb-8">Book Your Stay</h1>
+        <h1 className="text-4xl font-bold text-center mb-2">Book Your Stay</h1>
+        <p className="text-center text-gray-600 mb-8">Selected: {selectedRoom.name}</p>
         
         {renderStepIndicator()}
         

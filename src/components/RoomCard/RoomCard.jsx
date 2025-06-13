@@ -15,11 +15,12 @@ function RoomCard({ room }) {
         <h3 className="text-xl font-semibold mb-2">{name}</h3>
         <p className="text-gray-600 mb-4">{description}</p>
         <div className="flex justify-between items-center mb-4">
-          <span className="text-lg font-bold">₱{price}/night</span>
+          <span className="text-lg font-bold">₱{price.toLocaleString()}/night</span>
           <span className="text-gray-500">Up to {capacity} guests</span>
         </div>
         <Link 
           to={`/booking?room=${id}`}
+          state={{ selectedRoom: room }}
           className="block w-full bg-blue-600 text-white text-center py-2 rounded-md hover:bg-blue-700 transition-colors"
         >
           Book Now
@@ -28,5 +29,3 @@ function RoomCard({ room }) {
     </div>
   );
 }
-
-export default RoomCard;

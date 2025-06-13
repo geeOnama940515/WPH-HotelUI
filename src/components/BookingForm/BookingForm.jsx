@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { rooms } from '../../data/roomsData';
@@ -8,11 +8,21 @@ function BookingForm({ selectedRoom, onSubmit }) {
     guestFullName: '',
     emailAddress: '',
     phoneNumber: '',
-    roomType: selectedRoom?.id || '',
+    roomType: '',
     checkIn: new Date(),
     checkOut: new Date(Date.now() + 24 * 60 * 60 * 1000) // Tomorrow
   });
   const [errors, setErrors] = useState({});
+
+  // Pre-select the room if one was passed from the room card
+  useEffect(() => {
+    if (selectedRoom) {
+      setFormData(prev => ({
+        ...prev,
+        roomType: selectedRoom.id.toString()
+      }));
+    }
+  }, [selectedRoom]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -48,6 +58,25 @@ function BookingForm({ selectedRoom, onSubmit }) {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-semibold mb-6">Booking Information</h2>
+      
+      {/* Show selected room info if available */}
+      {selectedRoom && (
+        <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-medium text-blue-800 mb-2">Selected Room</h3>
+          <div className="flex items-center space-x-4">
+            <img 
+              src={selectedRoom.image} 
+              alt={selectedRoom.name}
+              className="w-16 h-16 object-cover rounded"
+            />
+            <div>
+              <p className="font-semibold">{selectedRoom.name}</p>
+              <p className="text-sm text-gray-600">{selectedRoom.description}</p>
+              <p className="text-blue-600 font-medium">₱{selectedRoom.price.toLocaleString()}/night</p>
+            </div>
+          </div>
+        </div>
+      )}
       
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Guest Information */}
