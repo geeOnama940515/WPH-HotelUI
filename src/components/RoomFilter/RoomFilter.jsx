@@ -1,9 +1,17 @@
 import React from 'react';
 
+/**
+ * RoomFilter component provides filtering and sorting options for rooms
+ * Allows users to filter by price, capacity, and sort results
+ * 
+ * @param {Function} onFilterChange - Callback function when filter changes
+ */
 function RoomFilter({ onFilterChange }) {
   return (
     <div className="bg-white p-4 rounded-lg shadow-md mb-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        
+        {/* Price range filter */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Price Range</label>
           <select
@@ -17,6 +25,7 @@ function RoomFilter({ onFilterChange }) {
           </select>
         </div>
 
+        {/* Capacity filter */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Capacity</label>
           <select
@@ -30,6 +39,7 @@ function RoomFilter({ onFilterChange }) {
           </select>
         </div>
 
+        {/* Sort options */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Sort By</label>
           <select

@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 
+/**
+ * RoomForm component for adding/editing rooms (Admin only)
+ * Handles both create and update operations for hotel rooms
+ * 
+ * @param {Object} room - Existing room data for editing (null for new room)
+ * @param {Function} onSubmit - Callback when form is submitted
+ * @param {Function} onCancel - Callback when form is cancelled
+ */
 function RoomForm({ room, onSubmit, onCancel }) {
+  // Form state with default values
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -10,14 +19,21 @@ function RoomForm({ room, onSubmit, onCancel }) {
     status: 'available'
   });
 
+  // Populate form with existing room data when editing
   useEffect(() => {
     if (room) {
       setFormData(room);
     }
   }, [room]);
 
+  /**
+   * Handle form submission
+   * @param {Event} e - Form submit event
+   */
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Convert string values to numbers for price and capacity
     onSubmit({
       ...formData,
       price: Number(formData.price),
@@ -27,6 +43,7 @@ function RoomForm({ room, onSubmit, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Room name */}
       <div>
         <label className="block text-sm font-medium text-gray-700">Room Name</label>
         <input
@@ -38,6 +55,7 @@ function RoomForm({ room, onSubmit, onCancel }) {
         />
       </div>
 
+      {/* Room description */}
       <div>
         <label className="block text-sm font-medium text-gray-700">Description</label>
         <textarea
@@ -49,6 +67,7 @@ function RoomForm({ room, onSubmit, onCancel }) {
         />
       </div>
 
+      {/* Room price */}
       <div>
         <label className="block text-sm font-medium text-gray-700">Price per Night (₱)</label>
         <input
@@ -61,6 +80,7 @@ function RoomForm({ room, onSubmit, onCancel }) {
         />
       </div>
 
+      {/* Room capacity */}
       <div>
         <label className="block text-sm font-medium text-gray-700">Capacity (Guests)</label>
         <input
@@ -73,6 +93,7 @@ function RoomForm({ room, onSubmit, onCancel }) {
         />
       </div>
 
+      {/* Room image URL */}
       <div>
         <label className="block text-sm font-medium text-gray-700">Image URL</label>
         <input
@@ -84,6 +105,7 @@ function RoomForm({ room, onSubmit, onCancel }) {
         />
       </div>
 
+      {/* Room status */}
       <div>
         <label className="block text-sm font-medium text-gray-700">Status</label>
         <select
@@ -97,6 +119,7 @@ function RoomForm({ room, onSubmit, onCancel }) {
         </select>
       </div>
 
+      {/* Form action buttons */}
       <div className="flex justify-end space-x-3">
         <button
           type="button"

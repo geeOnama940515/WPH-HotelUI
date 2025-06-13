@@ -1,6 +1,10 @@
 import React from 'react';
 import './Footer.css';
 
+/**
+ * Footer component with copyright information
+ * Simple footer that appears at the bottom of all pages
+ */
 function Footer() {
   return (
     <footer className="bg-gray-800 text-white py-6">

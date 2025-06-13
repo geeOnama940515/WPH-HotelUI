@@ -1,3 +1,15 @@
+/**
+ * Mock room data for development and testing
+ * In production, this data would come from the database via API calls
+ * 
+ * Each room object contains:
+ * - id: Unique identifier
+ * - name: Room type name
+ * - description: Room description
+ * - price: Price per night in Philippine Peso
+ * - image: Room image URL from Pexels
+ * - capacity: Maximum number of guests
+ */
 export const rooms = [
   {
     id: 1,
