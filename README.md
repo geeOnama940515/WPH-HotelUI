@@ -2,6 +2,12 @@
 
 A modern, responsive hotel booking system built with React and Vite, featuring a clean user interface and comprehensive booking management capabilities.
 
+## 🌐 Live Demo
+
+**[View Live Demo](https://wph-hotel.gregdoesdev.xyz)**
+
+Experience the full functionality of the WPH Hotel Booking System with our live demonstration.
+
 ## Project Overview
 
 The WPH Hotel Booking System is a full-featured web application designed for hotel management and guest bookings. It provides an intuitive interface for guests to browse rooms, make reservations, and manage their bookings, while offering administrators powerful tools to manage rooms and bookings.
@@ -42,10 +48,11 @@ The WPH Hotel Booking System is a full-featured web application designed for hot
 - **PostCSS & Autoprefixer** - CSS processing and vendor prefixing
 - **@tailwindcss/forms** - Enhanced form styling with Tailwind CSS
 
-### Backend Integration (Ready)
-- **Supabase** - Backend-as-a-Service with PostgreSQL database
-- **JWT Decode** - JSON Web Token handling for authentication
-- **Row Level Security (RLS)** - Database security policies
+### Backend Integration (API-Ready)
+- **C# .NET Backend** - RESTful API with Entity Framework
+- **JWT Authentication** - Secure token-based authentication
+- **SQL Server/PostgreSQL** - Relational database for data persistence
+- **Entity Framework Core** - Object-relational mapping (ORM)
 
 ### Deployment & Containerization
 - **Docker** - Containerization for consistent deployment
@@ -144,9 +151,9 @@ The application will be available at `http://localhost:4173`
 Create a `.env` file in the root directory for environment variables:
 
 ```env
-VITE_API_URL=http://localhost:3000
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_API_URL=http://localhost:5000/api
+# For production, update to your C# backend API URL
+# VITE_API_URL=https://your-api-domain.com/api
 ```
 
 ### Admin Access
@@ -157,13 +164,46 @@ To access the admin dashboard:
    - **Email:** admin@wphhotel.com
    - **Password:** Admin123!
 
-### Database Setup (Optional)
+### Backend Integration (C# .NET)
 
-If you want to connect to a real database:
-1. Set up a Supabase project
-2. Run the migration files in `supabase/migrations/`
-3. Update your environment variables
-4. The application will automatically use the database instead of mock data
+This frontend is designed to work with a C# .NET backend API. The application includes:
+
+#### API Service Layer
+- **RESTful API calls** ready for C# backend integration
+- **JWT token management** for secure authentication
+- **Comprehensive error handling** for API responses
+- **TypeScript-ready** data models and DTOs
+
+#### Expected Backend Endpoints
+```
+Authentication:
+POST /api/auth/login
+POST /api/auth/register
+
+Rooms:
+GET /api/rooms
+POST /api/rooms (Admin)
+PUT /api/rooms/{id} (Admin)
+DELETE /api/rooms/{id} (Admin)
+
+Bookings:
+GET /api/bookings (User's bookings)
+GET /api/bookings/all (Admin - all bookings)
+POST /api/bookings
+PUT /api/bookings/{id}/status (Admin)
+
+User Profile:
+GET /api/profile
+PUT /api/profile
+```
+
+#### Database Models
+The `types.txt` file contains complete C# entity models and DTOs ready for your backend implementation, including:
+- **User/Profile entities**
+- **Room entities with status management**
+- **Booking entities with full lifecycle**
+- **Authentication DTOs**
+- **API response wrappers**
 
 ### Production Deployment
 
@@ -176,7 +216,18 @@ For production deployment:
 
 2. **Deploy the `dist` folder** to your hosting provider (Netlify, Vercel, etc.)
 
-3. **Configure environment variables** on your hosting platform
+3. **Configure environment variables** on your hosting platform:
+   ```env
+   VITE_API_URL=https://your-csharp-api.com/api
+   ```
+
+### API Integration Notes
+
+- **Mock Data**: Currently uses mock data for development
+- **Service Layer**: All API calls are abstracted in service files
+- **Authentication**: JWT token handling is implemented
+- **Error Handling**: Comprehensive error handling for API failures
+- **Type Safety**: TypeScript interfaces ready for C# backend integration
 
 ### Troubleshooting
 
@@ -185,12 +236,14 @@ For production deployment:
 - **Port already in use:** Change the port in `vite.config.js` or kill the process using the port
 - **Dependencies not installing:** Delete `node_modules` and `package-lock.json`, then run `npm install` again
 - **Build errors:** Ensure all environment variables are properly set
+- **API connection issues:** Verify your C# backend is running and CORS is configured
 
 **Development Tips:**
 
 - Use the browser's developer tools to inspect responsive design
 - Check the console for any JavaScript errors
 - The application includes comprehensive error handling and validation
+- All service functions are ready for immediate C# backend integration
 
 ### Contributing
 
@@ -204,6 +257,9 @@ For production deployment:
 
 For support or questions about the WPH Hotel Booking System, please refer to the documentation or contact the development team.
 
+**Live Demo:** [https://wph-hotel.gregdoesdev.xyz](https://wph-hotel.gregdoesdev.xyz)
+
 ---
 
 **Built with ❤️ using React, Vite, and Tailwind CSS**
+**Backend-ready for C# .NET API integration**
