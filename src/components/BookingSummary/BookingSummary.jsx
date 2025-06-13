@@ -65,6 +65,7 @@ function BookingSummary({ bookingData, onConfirm, onBack }) {
             <p><span className="font-medium">Name:</span> {bookingData.guestFullName}</p>
             <p><span className="font-medium">Email:</span> {bookingData.emailAddress}</p>
             <p><span className="font-medium">Phone:</span> {bookingData.phoneNumber}</p>
+            <p><span className="font-medium">Number of Guests:</span> {bookingData.numberOfGuests} guest{bookingData.numberOfGuests !== 1 ? 's' : ''}</p>
           </div>
         </div>
 

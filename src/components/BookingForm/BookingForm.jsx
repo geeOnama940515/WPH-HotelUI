@@ -10,7 +10,8 @@ function BookingForm({ selectedRoom, onSubmit }) {
     phoneNumber: '',
     roomType: '',
     checkIn: new Date(),
-    checkOut: new Date(Date.now() + 24 * 60 * 60 * 1000) // Tomorrow
+    checkOut: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
+    numberOfGuests: 1
   });
   const [errors, setErrors] = useState({});
 
@@ -26,6 +27,7 @@ function BookingForm({ selectedRoom, onSubmit }) {
 
   const validateForm = () => {
     const newErrors = {};
+    const selectedRoomData = rooms.find(room => room.id === parseInt(formData.roomType));
     
     if (!formData.guestFullName.trim()) newErrors.guestFullName = 'Guest full name is required';
     if (!formData.emailAddress.trim()) newErrors.emailAddress = 'Email address is required';
@@ -35,6 +37,10 @@ function BookingForm({ selectedRoom, onSubmit }) {
     if (!formData.checkIn) newErrors.checkIn = 'Check-in date is required';
     if (!formData.checkOut) newErrors.checkOut = 'Check-out date is required';
     if (formData.checkOut <= formData.checkIn) newErrors.checkOut = 'Check-out date must be after check-in date';
+    if (!formData.numberOfGuests || formData.numberOfGuests < 1) newErrors.numberOfGuests = 'At least 1 guest is required';
+    if (selectedRoomData && formData.numberOfGuests > selectedRoomData.capacity) {
+      newErrors.numberOfGuests = `This room can accommodate maximum ${selectedRoomData.capacity} guests`;
+    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -55,6 +61,8 @@ function BookingForm({ selectedRoom, onSubmit }) {
     }));
   };
 
+  const selectedRoomData = rooms.find(room => room.id === parseInt(formData.roomType));
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-semibold mb-6">Booking Information</h2>
@@ -73,6 +81,7 @@ function BookingForm({ selectedRoom, onSubmit }) {
               <p className="font-semibold">{selectedRoom.name}</p>
               <p className="text-sm text-gray-600">{selectedRoom.description}</p>
               <p className="text-blue-600 font-medium">₱{selectedRoom.price.toLocaleString()}/night</p>
+              <p className="text-sm text-gray-500">Capacity: Up to {selectedRoom.capacity} guests</p>
             </div>
           </div>
         </div>
@@ -145,11 +154,34 @@ function BookingForm({ selectedRoom, onSubmit }) {
                 <option value="">Select a room type</option>
                 {rooms.map(room => (
                   <option key={room.id} value={room.id}>
-                    {room.name} - ₱{room.price.toLocaleString()}/night
+                    {room.name} - ₱{room.price.toLocaleString()}/night (Up to {room.capacity} guests)
                   </option>
                 ))}
               </select>
               {errors.roomType && <p className="text-red-500 text-sm mt-1">{errors.roomType}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Number of Guests *
+              </label>
+              <select
+                value={formData.numberOfGuests}
+                onChange={(e) => handleInputChange('numberOfGuests', parseInt(e.target.value))}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              >
+                {[...Array(selectedRoomData ? selectedRoomData.capacity : 6)].map((_, index) => (
+                  <option key={index + 1} value={index + 1}>
+                    {index + 1} Guest{index + 1 !== 1 ? 's' : ''}
+                  </option>
+                ))}
+              </select>
+              {errors.numberOfGuests && <p className="text-red-500 text-sm mt-1">{errors.numberOfGuests}</p>}
+              {selectedRoomData && (
+                <p className="text-sm text-gray-500 mt-1">
+                  This room can accommodate up to {selectedRoomData.capacity} guests
+                </p>
+              )}
             </div>
           </div>
 
