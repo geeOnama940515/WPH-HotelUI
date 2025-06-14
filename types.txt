@@ -18,7 +18,15 @@ public class Room
     public string Description { get; set; }
     public decimal Price { get; set; }
     public int Capacity { get; set; }
-    public string Image { get; set; }
+    
+    // Multiple image fields for room gallery
+    public string? Image1 { get; set; }  // Primary/main image
+    public string? Image2 { get; set; }  // Additional gallery images
+    public string? Image3 { get; set; }
+    public string? Image4 { get; set; }
+    public string? Image5 { get; set; }
+    public string? Image6 { get; set; }
+    
     public RoomStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -99,7 +107,15 @@ public class CreateRoomDto
     public string Description { get; set; }
     public decimal Price { get; set; }
     public int Capacity { get; set; }
-    public string Image { get; set; }
+    
+    // Multiple image fields for room gallery
+    public string? Image1 { get; set; }  // Primary/main image
+    public string? Image2 { get; set; }  // Additional gallery images
+    public string? Image3 { get; set; }
+    public string? Image4 { get; set; }
+    public string? Image5 { get; set; }
+    public string? Image6 { get; set; }
+    
     public RoomStatus Status { get; set; } = RoomStatus.Available;
 }
 
@@ -109,7 +125,15 @@ public class UpdateRoomDto
     public string Description { get; set; }
     public decimal Price { get; set; }
     public int Capacity { get; set; }
-    public string Image { get; set; }
+    
+    // Multiple image fields for room gallery
+    public string? Image1 { get; set; }  // Primary/main image
+    public string? Image2 { get; set; }  // Additional gallery images
+    public string? Image3 { get; set; }
+    public string? Image4 { get; set; }
+    public string? Image5 { get; set; }
+    public string? Image6 { get; set; }
+    
     public RoomStatus Status { get; set; }
 }
 
@@ -120,7 +144,15 @@ public class RoomDto
     public string Description { get; set; }
     public decimal Price { get; set; }
     public int Capacity { get; set; }
-    public string Image { get; set; }
+    
+    // Multiple image fields for room gallery
+    public string? Image1 { get; set; }  // Primary/main image
+    public string? Image2 { get; set; }  // Additional gallery images
+    public string? Image3 { get; set; }
+    public string? Image4 { get; set; }
+    public string? Image5 { get; set; }
+    public string? Image6 { get; set; }
+    
     public RoomStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -131,7 +163,7 @@ public class RoomSummaryDto
     public Guid Id { get; set; }
     public string Name { get; set; }
     public decimal Price { get; set; }
-    public string Image { get; set; }
+    public string? Image1 { get; set; }  // Primary image for card display
 }
 
 // Booking DTOs
@@ -240,6 +272,39 @@ public class BookingFilterDto
     public int PageSize { get; set; } = 10;
 }
 
+// Helper class for room image management
+public static class RoomImageHelper
+{
+    /// <summary>
+    /// Get all non-null images for a room in order
+    /// </summary>
+    /// <param name="room">Room entity or DTO</param>
+    /// <returns>List of image URLs</returns>
+    public static List<string> GetAllImages(RoomDto room)
+    {
+        var images = new List<string>();
+        
+        if (!string.IsNullOrEmpty(room.Image1)) images.Add(room.Image1);
+        if (!string.IsNullOrEmpty(room.Image2)) images.Add(room.Image2);
+        if (!string.IsNullOrEmpty(room.Image3)) images.Add(room.Image3);
+        if (!string.IsNullOrEmpty(room.Image4)) images.Add(room.Image4);
+        if (!string.IsNullOrEmpty(room.Image5)) images.Add(room.Image5);
+        if (!string.IsNullOrEmpty(room.Image6)) images.Add(room.Image6);
+        
+        return images;
+    }
+    
+    /// <summary>
+    /// Get the primary image (Image1) or first available image
+    /// </summary>
+    /// <param name="room">Room entity or DTO</param>
+    /// <returns>Primary image URL or null</returns>
+    public static string? GetPrimaryImage(RoomDto room)
+    {
+        return room.Image1 ?? room.Image2 ?? room.Image3 ?? room.Image4 ?? room.Image5 ?? room.Image6;
+    }
+}
+
 // Validation Attributes (for reference)
 /*
 Example usage in your DTOs:
@@ -259,4 +324,10 @@ public int Guests { get; set; }
 [Required]
 [Range(0.01, double.MaxValue)]
 public decimal Price { get; set; }
+
+[Url]
+public string? Image1 { get; set; }
+
+[StringLength(500)]
+public string? Image2 { get; set; }
 */
