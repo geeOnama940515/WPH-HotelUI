@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { FaWifi, FaTv, FaSnowflake, FaCoffee, FaBed, FaBath, FaUsers, FaArrowLeft, FaTimes, FaChevronLeft, FaChevronRight, FaPlay, FaPause } from 'react-icons/fa';
-import { rooms } from '../../data/roomsData';
+import { rooms, getRoomImages } from '../../data/roomsData';
 
 /**
  * RoomDetails component displays detailed information about a specific room
  * Features an auto-changing image gallery with manual controls
+ * Now supports multiple room images from the updated data structure
  * 
  * @returns {JSX.Element} Room details page with image gallery
  */
@@ -19,26 +20,19 @@ function RoomDetails() {
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Additional room images (in a real app, these would come from your database)
-  const additionalImages = [
-    room?.image,
-    "https://images.pexels.com/photos/1743229/pexels-photo-1743229.jpeg",
-    "https://images.pexels.com/photos/1457842/pexels-photo-1457842.jpeg",
-    "https://images.pexels.com/photos/1743227/pexels-photo-1743227.jpeg",
-    "https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg",
-    "https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg"
-  ].filter(Boolean); // Remove any undefined values
+  // Get all room images using the helper function
+  const roomImages = room ? getRoomImages(room) : [];
 
   // Auto-change images every 4 seconds
   useEffect(() => {
-    if (!isAutoPlay) return;
+    if (!isAutoPlay || roomImages.length <= 1) return;
 
     const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % additionalImages.length);
+      setCurrentImageIndex((prev) => (prev + 1) % roomImages.length);
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [isAutoPlay, additionalImages.length]);
+  }, [isAutoPlay, roomImages.length]);
 
   // Handle keyboard navigation in modal
   useEffect(() => {
@@ -77,9 +71,9 @@ function RoomDetails() {
    */
   const navigateImage = (direction) => {
     if (direction === 'next') {
-      setCurrentImageIndex((prev) => (prev + 1) % additionalImages.length);
+      setCurrentImageIndex((prev) => (prev + 1) % roomImages.length);
     } else {
-      setCurrentImageIndex((prev) => (prev - 1 + additionalImages.length) % additionalImages.length);
+      setCurrentImageIndex((prev) => (prev - 1 + roomImages.length) % roomImages.length);
     }
   };
 
@@ -162,9 +156,9 @@ function RoomDetails() {
             {/* Main image display */}
             <div className="relative h-96 md:h-[500px] overflow-hidden">
               <img
-                src={additionalImages[currentImageIndex]}
+                src={roomImages[currentImageIndex]}
                 alt={`${room.name} - Image ${currentImageIndex + 1}`}
-                className="w-full h-full object-cover transition-opacity duration-500"
+                className="w-full h-full object-cover transition-opacity duration-500 cursor-pointer"
                 onClick={openModal}
               />
               
@@ -183,33 +177,37 @@ function RoomDetails() {
                 </div>
               </div>
 
-              {/* Navigation arrows */}
-              <button
-                onClick={() => navigateImage('prev')}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all"
-              >
-                <FaChevronLeft size={20} />
-              </button>
-              
-              <button
-                onClick={() => navigateImage('next')}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all"
-              >
-                <FaChevronRight size={20} />
-              </button>
+              {/* Navigation arrows - only show if multiple images */}
+              {roomImages.length > 1 && (
+                <>
+                  <button
+                    onClick={() => navigateImage('prev')}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all"
+                  >
+                    <FaChevronLeft size={20} />
+                  </button>
+                  
+                  <button
+                    onClick={() => navigateImage('next')}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all"
+                  >
+                    <FaChevronRight size={20} />
+                  </button>
 
-              {/* Auto-play control */}
-              <button
-                onClick={toggleAutoPlay}
-                className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all"
-                title={isAutoPlay ? 'Pause slideshow' : 'Play slideshow'}
-              >
-                {isAutoPlay ? <FaPause size={16} /> : <FaPlay size={16} />}
-              </button>
+                  {/* Auto-play control */}
+                  <button
+                    onClick={toggleAutoPlay}
+                    className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all"
+                    title={isAutoPlay ? 'Pause slideshow' : 'Play slideshow'}
+                  >
+                    {isAutoPlay ? <FaPause size={16} /> : <FaPlay size={16} />}
+                  </button>
+                </>
+              )}
 
               {/* Image counter */}
               <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-lg">
-                {currentImageIndex + 1} / {additionalImages.length}
+                {currentImageIndex + 1} / {roomImages.length}
               </div>
 
               {/* Click to enlarge hint */}
@@ -218,28 +216,30 @@ function RoomDetails() {
               </div>
             </div>
 
-            {/* Thumbnail navigation */}
-            <div className="p-4 bg-gray-50">
-              <div className="flex space-x-2 overflow-x-auto">
-                {additionalImages.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => goToImage(index)}
-                    className={`flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                      index === currentImageIndex 
-                        ? 'border-blue-500 shadow-lg' 
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                  >
-                    <img
-                      src={image}
-                      alt={`Thumbnail ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
+            {/* Thumbnail navigation - only show if multiple images */}
+            {roomImages.length > 1 && (
+              <div className="p-4 bg-gray-50">
+                <div className="flex space-x-2 overflow-x-auto">
+                  {roomImages.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => goToImage(index)}
+                      className={`flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                        index === currentImageIndex 
+                          ? 'border-blue-500 shadow-lg' 
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      <img
+                        src={image}
+                        alt={`Thumbnail ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="p-6">
@@ -346,7 +346,7 @@ function RoomDetails() {
               .map(similarRoom => (
                 <div key={similarRoom.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                   <img
-                    src={similarRoom.image}
+                    src={similarRoom.image1 || similarRoom.image}
                     alt={similarRoom.name}
                     className="w-full h-48 object-cover"
                   />
@@ -384,30 +384,33 @@ function RoomDetails() {
           {/* Image counter */}
           <div className="absolute top-4 left-4 text-white z-60">
             <span className="bg-black/50 px-3 py-1 rounded-lg">
-              {currentImageIndex + 1} / {additionalImages.length}
+              {currentImageIndex + 1} / {roomImages.length}
             </span>
           </div>
 
-          {/* Previous button */}
-          <button
-            onClick={() => navigateImage('prev')}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-60 bg-black/50 p-3 rounded-full"
-          >
-            <FaChevronLeft size={24} />
-          </button>
+          {/* Navigation buttons - only show if multiple images */}
+          {roomImages.length > 1 && (
+            <>
+              <button
+                onClick={() => navigateImage('prev')}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-60 bg-black/50 p-3 rounded-full"
+              >
+                <FaChevronLeft size={24} />
+              </button>
 
-          {/* Next button */}
-          <button
-            onClick={() => navigateImage('next')}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-60 bg-black/50 p-3 rounded-full"
-          >
-            <FaChevronRight size={24} />
-          </button>
+              <button
+                onClick={() => navigateImage('next')}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-60 bg-black/50 p-3 rounded-full"
+              >
+                <FaChevronRight size={24} />
+              </button>
+            </>
+          )}
 
           {/* Main image */}
           <div className="max-w-5xl max-h-[85vh] mx-4">
             <img
-              src={additionalImages[currentImageIndex]}
+              src={roomImages[currentImageIndex]}
               alt={`${room.name} - Image ${currentImageIndex + 1}`}
               className="max-w-full max-h-full object-contain rounded-lg"
             />
@@ -420,24 +423,26 @@ function RoomDetails() {
             </p>
           </div>
 
-          {/* Thumbnail navigation */}
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 max-w-md overflow-x-auto">
-            {additionalImages.map((image, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentImageIndex(index)}
-                className={`flex-shrink-0 w-16 h-12 rounded overflow-hidden border-2 transition-all ${
-                  index === currentImageIndex ? 'border-white' : 'border-transparent opacity-60 hover:opacity-80'
-                }`}
-              >
-                <img
-                  src={image}
-                  alt={`Thumbnail ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            ))}
-          </div>
+          {/* Thumbnail navigation - only show if multiple images */}
+          {roomImages.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 max-w-md overflow-x-auto">
+              {roomImages.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentImageIndex(index)}
+                  className={`flex-shrink-0 w-16 h-12 rounded overflow-hidden border-2 transition-all ${
+                    index === currentImageIndex ? 'border-white' : 'border-transparent opacity-60 hover:opacity-80'
+                  }`}
+                >
+                  <img
+                    src={image}
+                    alt={`Thumbnail ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
