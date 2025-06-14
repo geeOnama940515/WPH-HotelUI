@@ -1,12 +1,88 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { FaWifi, FaTv, FaSnowflake, FaCoffee, FaBed, FaBath, FaUsers, FaArrowLeft } from 'react-icons/fa';
+import { FaWifi, FaTv, FaSnowflake, FaCoffee, FaBed, FaBath, FaUsers, FaArrowLeft, FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { rooms } from '../../data/roomsData';
 
 function RoomDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const room = rooms.find(r => r.id === parseInt(id));
+  
+  // Modal state for image gallery
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // Parallax scroll state
+  const [scrollY, setScrollY] = useState(0);
+
+  // Additional room images (in a real app, these would come from your database)
+  const additionalImages = [
+    room?.image,
+    "https://images.pexels.com/photos/1743229/pexels-photo-1743229.jpeg",
+    "https://images.pexels.com/photos/1457842/pexels-photo-1457842.jpeg",
+    "https://images.pexels.com/photos/1743227/pexels-photo-1743227.jpeg",
+    "https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg",
+    "https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg"
+  ].filter(Boolean); // Remove any undefined values
+
+  // Handle scroll for parallax effect
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Handle keyboard navigation in modal
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (!isModalOpen) return;
+      
+      if (e.key === 'Escape') {
+        setIsModalOpen(false);
+      } else if (e.key === 'ArrowLeft') {
+        navigateImage('prev');
+      } else if (e.key === 'ArrowRight') {
+        navigateImage('next');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [isModalOpen, currentImageIndex]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isModalOpen]);
+
+  /**
+   * Open image modal at specific index
+   * @param {number} index - Image index to display
+   */
+  const openModal = (index) => {
+    setCurrentImageIndex(index);
+    setIsModalOpen(true);
+  };
+
+  /**
+   * Navigate between images in modal
+   * @param {string} direction - 'next' or 'prev'
+   */
+  const navigateImage = (direction) => {
+    if (direction === 'next') {
+      setCurrentImageIndex((prev) => (prev + 1) % additionalImages.length);
+    } else {
+      setCurrentImageIndex((prev) => (prev - 1 + additionalImages.length) % additionalImages.length);
+    }
+  };
 
   if (!room) {
     return (
@@ -26,14 +102,6 @@ function RoomDetails() {
       </div>
     );
   }
-
-  // Additional room images (in a real app, these would come from your database)
-  const additionalImages = [
-    room.image,
-    "https://images.pexels.com/photos/1743229/pexels-photo-1743229.jpeg",
-    "https://images.pexels.com/photos/1457842/pexels-photo-1457842.jpeg",
-    "https://images.pexels.com/photos/1743227/pexels-photo-1743227.jpeg"
-  ];
 
   const amenities = [
     { icon: FaWifi, name: "Free WiFi" },
@@ -61,24 +129,77 @@ function RoomDetails() {
         {/* Back button */}
         <button
           onClick={() => navigate('/rooms')}
-          className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 mb-6"
+          className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 mb-6 transition-colors"
         >
           <FaArrowLeft />
           <span>Back to Rooms</span>
         </button>
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Room Images Gallery */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 p-4">
-            {additionalImages.map((image, index) => (
-              <div key={index} className={`${index === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}>
-                <img
-                  src={image}
-                  alt={`${room.name} - Image ${index + 1}`}
-                  className="w-full h-48 md:h-full object-cover rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
-                />
+          {/* Parallax Room Images Gallery */}
+          <div className="relative h-96 md:h-[500px] overflow-hidden">
+            {/* Main parallax image */}
+            <div 
+              className="absolute inset-0 bg-cover bg-center transition-transform duration-300 ease-out"
+              style={{ 
+                backgroundImage: `url(${additionalImages[0]})`,
+                transform: `translateY(${scrollY * 0.5}px)`,
+                backgroundAttachment: 'fixed'
+              }}
+            >
+              {/* Overlay for better text readability */}
+              <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+            </div>
+            
+            {/* Room title overlay */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-10">
+              <h1 className="text-4xl font-bold mb-2">{room.name}</h1>
+              <div className="flex items-center space-x-4 text-lg">
+                <div className="flex items-center space-x-1">
+                  <FaUsers />
+                  <span>Up to {room.capacity} guests</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <FaBed />
+                  <span>King Size Bed</span>
+                </div>
               </div>
-            ))}
+            </div>
+
+            {/* Click to view gallery indicator */}
+            <div className="absolute top-4 right-4 z-10">
+              <button
+                onClick={() => openModal(0)}
+                className="bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg hover:bg-opacity-70 transition-all duration-300 backdrop-blur-sm"
+              >
+                View Gallery ({additionalImages.length} photos)
+              </button>
+            </div>
+          </div>
+
+          {/* Thumbnail Gallery */}
+          <div className="p-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+              {additionalImages.slice(1).map((image, index) => (
+                <div 
+                  key={index + 1} 
+                  className="relative group cursor-pointer overflow-hidden rounded-lg"
+                  onClick={() => openModal(index + 1)}
+                >
+                  <img
+                    src={image}
+                    alt={`${room.name} - Image ${index + 2}`}
+                    className="w-full h-20 object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                    <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-sm font-medium">
+                      View
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="p-6">
@@ -86,17 +207,6 @@ function RoomDetails() {
               {/* Room Information */}
               <div className="lg:col-span-2">
                 <div className="mb-6">
-                  <h1 className="text-3xl font-bold mb-2">{room.name}</h1>
-                  <div className="flex items-center space-x-4 text-gray-600 mb-4">
-                    <div className="flex items-center space-x-1">
-                      <FaUsers />
-                      <span>Up to {room.capacity} guests</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <FaBed />
-                      <span>King Size Bed</span>
-                    </div>
-                  </div>
                   <p className="text-gray-700 text-lg leading-relaxed">{room.description}</p>
                 </div>
 
@@ -118,7 +228,7 @@ function RoomDetails() {
                   <h2 className="text-2xl font-semibold mb-4">Amenities</h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {amenities.map((amenity, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                      <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                         <amenity.icon className="text-blue-600 text-xl" />
                         <span className="text-gray-700">{amenity.name}</span>
                       </div>
@@ -194,7 +304,7 @@ function RoomDetails() {
               .filter(r => r.id !== room.id)
               .slice(0, 3)
               .map(similarRoom => (
-                <div key={similarRoom.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div key={similarRoom.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                   <img
                     src={similarRoom.image}
                     alt={similarRoom.name}
@@ -219,6 +329,79 @@ function RoomDetails() {
           </div>
         </div>
       </div>
+
+      {/* Image Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
+          {/* Close button */}
+          <button
+            onClick={() => setIsModalOpen(false)}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 z-60"
+          >
+            <FaTimes size={24} />
+          </button>
+
+          {/* Image counter */}
+          <div className="absolute top-4 left-4 text-white z-60">
+            <span className="bg-black bg-opacity-50 px-3 py-1 rounded-lg">
+              {currentImageIndex + 1} / {additionalImages.length}
+            </span>
+          </div>
+
+          {/* Previous button */}
+          <button
+            onClick={() => navigateImage('prev')}
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-60"
+            disabled={additionalImages.length <= 1}
+          >
+            <FaChevronLeft size={32} />
+          </button>
+
+          {/* Next button */}
+          <button
+            onClick={() => navigateImage('next')}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-60"
+            disabled={additionalImages.length <= 1}
+          >
+            <FaChevronRight size={32} />
+          </button>
+
+          {/* Main image */}
+          <div className="max-w-4xl max-h-[80vh] mx-4">
+            <img
+              src={additionalImages[currentImageIndex]}
+              alt={`${room.name} - Image ${currentImageIndex + 1}`}
+              className="max-w-full max-h-full object-contain"
+            />
+          </div>
+
+          {/* Image description */}
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-center">
+            <p className="bg-black bg-opacity-50 px-4 py-2 rounded-lg">
+              {room.name} - Gallery Image {currentImageIndex + 1}
+            </p>
+          </div>
+
+          {/* Thumbnail navigation */}
+          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 flex space-x-2 max-w-md overflow-x-auto">
+            {additionalImages.map((image, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImageIndex(index)}
+                className={`flex-shrink-0 w-16 h-12 rounded overflow-hidden border-2 transition-all ${
+                  index === currentImageIndex ? 'border-white' : 'border-transparent opacity-60 hover:opacity-80'
+                }`}
+              >
+                <img
+                  src={image}
+                  alt={`Thumbnail ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
