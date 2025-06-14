@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import RoomForm from '../../components/RoomForm/RoomForm';
-import { FaUsers, FaDollarSign, FaBed, FaCalendarCheck, FaTrendUp, FaChartLine } from 'react-icons/fa';
+import { FaUsers, FaDollarSign, FaBed, FaCalendarCheck, FaArrowUp, FaChartLine } from 'react-icons/fa';
 
 function Admin() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -320,7 +320,7 @@ function Admin() {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <FaTrendUp className="text-4xl text-green-500 mx-auto mb-3" />
+          <FaArrowUp className="text-4xl text-green-500 mx-auto mb-3" />
           <h4 className="text-lg font-semibold mb-2">Growth Rate</h4>
           <p className="text-2xl font-bold text-green-600">+12%</p>
         </div>
