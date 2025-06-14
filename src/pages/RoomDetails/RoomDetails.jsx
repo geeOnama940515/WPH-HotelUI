@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { FaWifi, FaTv, FaSnowflake, FaCoffee, FaBed, FaBath, FaUsers, FaArrowLeft, FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaWifi, FaTv, FaSnowflake, FaCoffee, FaBed, FaBath, FaUsers, FaArrowLeft, FaTimes, FaChevronLeft, FaChevronRight, FaPlay, FaPause } from 'react-icons/fa';
 import { rooms } from '../../data/roomsData';
 
+/**
+ * RoomDetails component displays detailed information about a specific room
+ * Features an auto-changing image gallery with manual controls
+ * 
+ * @returns {JSX.Element} Room details page with image gallery
+ */
 function RoomDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const room = rooms.find(r => r.id === parseInt(id));
   
-  // Modal state for image gallery
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Gallery state
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
-  // Parallax scroll state
-  const [scrollY, setScrollY] = useState(0);
+  const [isAutoPlay, setIsAutoPlay] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Additional room images (in a real app, these would come from your database)
   const additionalImages = [
@@ -25,12 +29,16 @@ function RoomDetails() {
     "https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg"
   ].filter(Boolean); // Remove any undefined values
 
-  // Handle scroll for parallax effect
+  // Auto-change images every 4 seconds
   useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    if (!isAutoPlay) return;
+
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % additionalImages.length);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [isAutoPlay, additionalImages.length]);
 
   // Handle keyboard navigation in modal
   useEffect(() => {
@@ -48,7 +56,7 @@ function RoomDetails() {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isModalOpen, currentImageIndex]);
+  }, [isModalOpen]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -64,16 +72,7 @@ function RoomDetails() {
   }, [isModalOpen]);
 
   /**
-   * Open image modal at specific index
-   * @param {number} index - Image index to display
-   */
-  const openModal = (index) => {
-    setCurrentImageIndex(index);
-    setIsModalOpen(true);
-  };
-
-  /**
-   * Navigate between images in modal
+   * Navigate between images
    * @param {string} direction - 'next' or 'prev'
    */
   const navigateImage = (direction) => {
@@ -82,6 +81,28 @@ function RoomDetails() {
     } else {
       setCurrentImageIndex((prev) => (prev - 1 + additionalImages.length) % additionalImages.length);
     }
+  };
+
+  /**
+   * Go to specific image
+   * @param {number} index - Image index
+   */
+  const goToImage = (index) => {
+    setCurrentImageIndex(index);
+  };
+
+  /**
+   * Toggle auto-play functionality
+   */
+  const toggleAutoPlay = () => {
+    setIsAutoPlay(!isAutoPlay);
+  };
+
+  /**
+   * Open image modal at current index
+   */
+  const openModal = () => {
+    setIsModalOpen(true);
   };
 
   if (!room) {
@@ -136,69 +157,88 @@ function RoomDetails() {
         </button>
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Parallax Room Images Gallery */}
-          <div className="relative h-96 md:h-[500px] overflow-hidden">
-            {/* Main parallax image */}
-            <div 
-              className="absolute inset-0 bg-cover bg-center transition-transform duration-300 ease-out"
-              style={{ 
-                backgroundImage: `url(${additionalImages[0]})`,
-                transform: `translateY(${scrollY * 0.5}px)`,
-                backgroundAttachment: 'fixed'
-              }}
-            >
-              {/* Overlay for better text readability */}
-              <div className="absolute inset-0 bg-black bg-opacity-30"></div>
-            </div>
-            
-            {/* Room title overlay */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-10">
-              <h1 className="text-4xl font-bold mb-2">{room.name}</h1>
-              <div className="flex items-center space-x-4 text-lg">
-                <div className="flex items-center space-x-1">
-                  <FaUsers />
-                  <span>Up to {room.capacity} guests</span>
+          {/* Auto-Changing Image Gallery */}
+          <div className="relative">
+            {/* Main image display */}
+            <div className="relative h-96 md:h-[500px] overflow-hidden">
+              <img
+                src={additionalImages[currentImageIndex]}
+                alt={`${room.name} - Image ${currentImageIndex + 1}`}
+                className="w-full h-full object-cover transition-opacity duration-500"
+                onClick={openModal}
+              />
+              
+              {/* Image overlay with room info */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6 text-white">
+                <h1 className="text-4xl font-bold mb-2">{room.name}</h1>
+                <div className="flex items-center space-x-4 text-lg">
+                  <div className="flex items-center space-x-1">
+                    <FaUsers />
+                    <span>Up to {room.capacity} guests</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <FaBed />
+                    <span>King Size Bed</span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <FaBed />
-                  <span>King Size Bed</span>
-                </div>
+              </div>
+
+              {/* Navigation arrows */}
+              <button
+                onClick={() => navigateImage('prev')}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all"
+              >
+                <FaChevronLeft size={20} />
+              </button>
+              
+              <button
+                onClick={() => navigateImage('next')}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all"
+              >
+                <FaChevronRight size={20} />
+              </button>
+
+              {/* Auto-play control */}
+              <button
+                onClick={toggleAutoPlay}
+                className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all"
+                title={isAutoPlay ? 'Pause slideshow' : 'Play slideshow'}
+              >
+                {isAutoPlay ? <FaPause size={16} /> : <FaPlay size={16} />}
+              </button>
+
+              {/* Image counter */}
+              <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-lg">
+                {currentImageIndex + 1} / {additionalImages.length}
+              </div>
+
+              {/* Click to enlarge hint */}
+              <div className="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-lg text-sm">
+                Click to enlarge
               </div>
             </div>
 
-            {/* Click to view gallery indicator */}
-            <div className="absolute top-4 right-4 z-10">
-              <button
-                onClick={() => openModal(0)}
-                className="bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg hover:bg-opacity-70 transition-all duration-300 backdrop-blur-sm"
-              >
-                View Gallery ({additionalImages.length} photos)
-              </button>
-            </div>
-          </div>
-
-          {/* Thumbnail Gallery */}
-          <div className="p-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-              {additionalImages.slice(1).map((image, index) => (
-                <div 
-                  key={index + 1} 
-                  className="relative group cursor-pointer overflow-hidden rounded-lg"
-                  onClick={() => openModal(index + 1)}
-                >
-                  <img
-                    src={image}
-                    alt={`${room.name} - Image ${index + 2}`}
-                    className="w-full h-20 object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
-                  {/* Hover overlay */}
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                    <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-sm font-medium">
-                      View
-                    </span>
-                  </div>
-                </div>
-              ))}
+            {/* Thumbnail navigation */}
+            <div className="p-4 bg-gray-50">
+              <div className="flex space-x-2 overflow-x-auto">
+                {additionalImages.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToImage(index)}
+                    className={`flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                      index === currentImageIndex 
+                        ? 'border-blue-500 shadow-lg' 
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                  >
+                    <img
+                      src={image}
+                      alt={`Thumbnail ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -330,20 +370,20 @@ function RoomDetails() {
         </div>
       </div>
 
-      {/* Image Modal */}
+      {/* Full-Screen Image Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center">
           {/* Close button */}
           <button
             onClick={() => setIsModalOpen(false)}
-            className="absolute top-4 right-4 text-white hover:text-gray-300 z-60"
+            className="absolute top-4 right-4 text-white hover:text-gray-300 z-60 bg-black/50 p-2 rounded-full"
           >
             <FaTimes size={24} />
           </button>
 
           {/* Image counter */}
           <div className="absolute top-4 left-4 text-white z-60">
-            <span className="bg-black bg-opacity-50 px-3 py-1 rounded-lg">
+            <span className="bg-black/50 px-3 py-1 rounded-lg">
               {currentImageIndex + 1} / {additionalImages.length}
             </span>
           </div>
@@ -351,39 +391,37 @@ function RoomDetails() {
           {/* Previous button */}
           <button
             onClick={() => navigateImage('prev')}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-60"
-            disabled={additionalImages.length <= 1}
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-60 bg-black/50 p-3 rounded-full"
           >
-            <FaChevronLeft size={32} />
+            <FaChevronLeft size={24} />
           </button>
 
           {/* Next button */}
           <button
             onClick={() => navigateImage('next')}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-60"
-            disabled={additionalImages.length <= 1}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-60 bg-black/50 p-3 rounded-full"
           >
-            <FaChevronRight size={32} />
+            <FaChevronRight size={24} />
           </button>
 
           {/* Main image */}
-          <div className="max-w-4xl max-h-[80vh] mx-4">
+          <div className="max-w-5xl max-h-[85vh] mx-4">
             <img
               src={additionalImages[currentImageIndex]}
               alt={`${room.name} - Image ${currentImageIndex + 1}`}
-              className="max-w-full max-h-full object-contain"
+              className="max-w-full max-h-full object-contain rounded-lg"
             />
           </div>
 
           {/* Image description */}
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-center">
-            <p className="bg-black bg-opacity-50 px-4 py-2 rounded-lg">
+          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 text-white text-center">
+            <p className="bg-black/50 px-4 py-2 rounded-lg">
               {room.name} - Gallery Image {currentImageIndex + 1}
             </p>
           </div>
 
           {/* Thumbnail navigation */}
-          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 flex space-x-2 max-w-md overflow-x-auto">
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 max-w-md overflow-x-auto">
             {additionalImages.map((image, index) => (
               <button
                 key={index}
