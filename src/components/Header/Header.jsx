@@ -47,7 +47,7 @@ function Header() {
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/rooms" className="nav-link">Rooms</Link>
-            <Link to="/rooms" className="nav-link">Book Now</Link>
+            <Link to="/booking" className="nav-link bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Book Now</Link>
             <Link to="/contact" className="nav-link">Contact</Link>
             
             {/* Admin section - only show if user is admin */}
@@ -66,7 +66,7 @@ function Header() {
           <div className="flex flex-col space-y-4">
             <Link to="/" className="nav-link" onClick={() => setIsMenuOpen(false)}>Home</Link>
             <Link to="/rooms" className="nav-link" onClick={() => setIsMenuOpen(false)}>Rooms</Link>
-            <Link to="/rooms" className="nav-link" onClick={() => setIsMenuOpen(false)}>Book Now</Link>
+            <Link to="/booking" className="nav-link bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-center" onClick={() => setIsMenuOpen(false)}>Book Now</Link>
             <Link to="/contact" className="nav-link" onClick={() => setIsMenuOpen(false)}>Contact</Link>
             
             {/* Admin menu for mobile */}
