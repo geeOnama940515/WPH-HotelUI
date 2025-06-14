@@ -134,29 +134,34 @@ function Booking() {
           {/* Room Selection Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {rooms.map(room => (
-              <div key={room.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+              <div key={room.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
                 <img 
                   src={room.image} 
                   alt={room.name}
                   className="w-full h-48 object-cover"
                 />
-                <div className="p-6">
+                <div className="p-6 flex flex-col flex-grow">
                   <h3 className="text-xl font-semibold mb-2">{room.name}</h3>
-                  <p className="text-gray-600 mb-4">{room.description}</p>
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-2xl font-bold text-blue-600">₱{room.price.toLocaleString()}</span>
-                    <span className="text-gray-500">per night</span>
+                  <p className="text-gray-600 mb-4 flex-grow">{room.description}</p>
+                  
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-2xl font-bold text-blue-600">₱{room.price.toLocaleString()}</span>
+                      <span className="text-gray-500">per night</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Capacity:</span>
+                      <span className="font-medium">Up to {room.capacity} guests</span>
+                    </div>
+                    
+                    <button
+                      onClick={() => setSelectedRoom(room)}
+                      className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors font-semibold mt-auto"
+                    >
+                      Select This Room
+                    </button>
                   </div>
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-gray-600">Capacity:</span>
-                    <span className="font-medium">Up to {room.capacity} guests</span>
-                  </div>
-                  <button
-                    onClick={() => setSelectedRoom(room)}
-                    className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors font-semibold"
-                  >
-                    Select This Room
-                  </button>
                 </div>
               </div>
             ))}
