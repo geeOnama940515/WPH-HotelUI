@@ -4,10 +4,11 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5187';
 /**
  * Custom fetch wrapper with authentication and error handling
  * Automatically includes JWT token in requests and handles common errors
+ * Updated to handle Result<T> wrapper pattern from backend
  * 
  * @param {string} endpoint - API endpoint to call
  * @param {Object} options - Fetch options (method, headers, body, etc.)
- * @returns {Promise<Object>} Parsed JSON response
+ * @returns {Promise<Object>} Parsed JSON response data
  */
 const customFetch = async (endpoint, options = {}) => {
   // Get JWT token from localStorage for authenticated requests
@@ -32,20 +33,19 @@ const customFetch = async (endpoint, options = {}) => {
     // Make the API request
     const response = await fetch(`${API_URL}${endpoint}`, config);
     
-    // Handle non-successful responses
-    if (!response.ok) {
-      let errorMessage = 'Something went wrong';
-      try {
-        const error = await response.json();
-        errorMessage = error.message || error.title || errorMessage;
-      } catch {
-        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-      }
+    // Parse JSON response
+    const result = await response.json();
+    
+    // Handle non-successful responses or failed results
+    if (!response.ok || !result.isSuccess) {
+      const errorMessage = result.message || 
+                          (result.errors && result.errors.length > 0 ? result.errors.join(', ') : '') ||
+                          `HTTP ${response.status}: ${response.statusText}`;
       throw new Error(errorMessage);
     }
 
-    // Return parsed JSON response
-    return await response.json();
+    // Return the data from the Result<T> wrapper
+    return result.data;
   } catch (error) {
     // Re-throw error for handling by calling code
     throw error;
@@ -101,28 +101,33 @@ export const api = {
    * @param {FormData} formData - Form data with files
    * @returns {Promise<Object>} Response data
    */
-  postFile: (endpoint, formData) => {
+  postFile: async (endpoint, formData) => {
     const token = localStorage.getItem('token');
     
-    return fetch(`${API_URL}${endpoint}`, {
-      method: 'POST',
-      headers: {
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        // Don't set Content-Type for FormData, let browser set it with boundary
-      },
-      body: formData
-    }).then(async response => {
-      if (!response.ok) {
-        let errorMessage = 'Upload failed';
-        try {
-          const error = await response.json();
-          errorMessage = error.message || error.title || errorMessage;
-        } catch {
-          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        }
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          // Don't set Content-Type for FormData, let browser set it with boundary
+        },
+        body: formData
+      });
+
+      const result = await response.json();
+      
+      // Handle non-successful responses or failed results
+      if (!response.ok || !result.isSuccess) {
+        const errorMessage = result.message || 
+                            (result.errors && result.errors.length > 0 ? result.errors.join(', ') : '') ||
+                            `HTTP ${response.status}: ${response.statusText}`;
         throw new Error(errorMessage);
       }
-      return response.json();
-    });
+
+      // Return the data from the Result<T> wrapper
+      return result.data;
+    } catch (error) {
+      throw error;
+    }
   }
 };

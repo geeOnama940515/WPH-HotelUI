@@ -24,7 +24,7 @@ function Admin() {
     occupancyRate: 78,
     averageStayDuration: 2.4,
     totalRooms: rooms.length,
-    availableRooms: rooms.filter(room => room.status === 'Available').length
+    availableRooms: rooms.filter(room => room.status === 0).length // 0 = Available
   };
 
   const recentBookings = [
@@ -127,7 +127,7 @@ function Admin() {
       await updateRoomStatus(roomId, newStatus);
       // Update local state
       setRooms(rooms.map(room => 
-        room.id === roomId ? { ...room, status: newStatus } : room
+        room.id === roomId ? { ...room, status: parseInt(newStatus) } : room
       ));
     } catch (error) {
       console.error('Failed to update room status:', error);
@@ -174,10 +174,19 @@ function Admin() {
 
   const getRoomStatusColor = (status) => {
     switch (status) {
-      case 'Available': return 'bg-green-100 text-green-800';
-      case 'Occupied': return 'bg-red-100 text-red-800';
-      case 'Maintenance': return 'bg-yellow-100 text-yellow-800';
+      case 0: return 'bg-green-100 text-green-800'; // Available
+      case 1: return 'bg-red-100 text-red-800';     // Occupied
+      case 2: return 'bg-yellow-100 text-yellow-800'; // Maintenance
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getRoomStatusText = (status) => {
+    switch (status) {
+      case 0: return 'Available';
+      case 1: return 'Occupied';
+      case 2: return 'Maintenance';
+      default: return 'Unknown';
     }
   };
 
@@ -263,7 +272,7 @@ function Admin() {
                 <span className="font-medium">Available Rooms</span>
               </div>
               <span className="text-lg font-bold text-green-600">
-                {rooms.filter(room => room.status === 'Available').length}
+                {rooms.filter(room => room.status === 0).length}
               </span>
             </div>
             
@@ -273,7 +282,7 @@ function Admin() {
                 <span className="font-medium">Occupied Rooms</span>
               </div>
               <span className="text-lg font-bold text-red-600">
-                {rooms.filter(room => room.status === 'Occupied').length}
+                {rooms.filter(room => room.status === 1).length}
               </span>
             </div>
             
@@ -283,7 +292,7 @@ function Admin() {
                 <span className="font-medium">Maintenance</span>
               </div>
               <span className="text-lg font-bold text-yellow-600">
-                {rooms.filter(room => room.status === 'Maintenance').length}
+                {rooms.filter(room => room.status === 2).length}
               </span>
             </div>
           </div>
@@ -485,11 +494,11 @@ function Admin() {
                         <select
                           onChange={(e) => handleRoomStatusChange(room.id, e.target.value)}
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                          value={room.status || 'Available'}
+                          value={room.status || 0}
                         >
-                          <option value="Available">Available</option>
-                          <option value="Occupied">Occupied</option>
-                          <option value="Maintenance">Maintenance</option>
+                          <option value="0">Available</option>
+                          <option value="1">Occupied</option>
+                          <option value="2">Maintenance</option>
                         </select>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

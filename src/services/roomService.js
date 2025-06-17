@@ -2,7 +2,7 @@ import { api } from './api';
 
 /**
  * Room service for managing hotel rooms
- * All functions are integrated with your backend API
+ * All functions are integrated with your backend API using Result<T> pattern
  */
 
 /**
@@ -33,7 +33,7 @@ export const getRoomById = (roomId) => api.get(`/api/room/${roomId}`);
 export const createRoom = (roomData) => {
   const createRoomDto = {
     name: roomData.name,
-    description: roomData.description,
+    description: roomData.description || '',
     price: roomData.price,
     capacity: roomData.capacity,
     images: [] // Images will be uploaded separately
@@ -52,7 +52,7 @@ export const createRoom = (roomData) => {
 export const updateRoom = (roomId, roomData) => {
   const updateRoomDto = {
     name: roomData.name,
-    description: roomData.description,
+    description: roomData.description || '',
     price: roomData.price,
     capacity: roomData.capacity
   };
