@@ -1,17 +1,37 @@
 import React from 'react';
-import { rooms } from '../../data/roomsData';
+import { getRooms } from '../../services/roomService';
 
 /**
  * BookingSummary component displays booking details and cost breakdown
  * Shows guest information, booking details, and total cost calculation
+ * Now handles API room data structure
  * 
  * @param {Object} bookingData - Booking form data
  * @param {Function} onConfirm - Callback when booking is confirmed
  * @param {Function} onBack - Callback to go back to form
  */
 function BookingSummary({ bookingData, onConfirm, onBack }) {
+  const [rooms, setRooms] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  // Load rooms to get current room data
+  React.useEffect(() => {
+    loadRooms();
+  }, []);
+
+  const loadRooms = async () => {
+    try {
+      const roomsData = await getRooms();
+      setRooms(roomsData);
+    } catch (error) {
+      console.error('Failed to load rooms:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Find the selected room from the rooms data
-  const selectedRoom = rooms.find(room => room.id === parseInt(bookingData?.roomType));
+  const selectedRoom = rooms.find(room => room.id === bookingData?.roomType);
   
   /**
    * Calculate booking costs including taxes and service charges
@@ -64,25 +84,38 @@ function BookingSummary({ bookingData, onConfirm, onBack }) {
 
   const { nights, roomTotal, tax, serviceCharge, total } = calculateBookingDetails();
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md">
+        <h2 className="text-xl lg:text-2xl font-semibold mb-4">Booking Summary</h2>
+        <div className="flex justify-center items-center h-32">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-2">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
   // Show message if booking data is incomplete
   if (!bookingData || !selectedRoom) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-2xl font-semibold mb-4">Booking Summary</h2>
+      <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md">
+        <h2 className="text-xl lg:text-2xl font-semibold mb-4">Booking Summary</h2>
         <p className="text-gray-600">Please complete the booking form to see your summary.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-semibold mb-6">Booking Summary</h2>
+    <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md">
+      <h2 className="text-xl lg:text-2xl font-semibold mb-6">Booking Summary</h2>
       
       <div className="space-y-6">
         {/* Guest Details Section */}
         <div className="border-b pb-4">
           <h3 className="text-lg font-medium mb-3">Guest Details</h3>
-          <div className="space-y-2">
+          <div className="space-y-2 text-sm lg:text-base">
             <p><span className="font-medium">Name:</span> {bookingData.guestFullName}</p>
             <p><span className="font-medium">Email:</span> {bookingData.emailAddress}</p>
             <p><span className="font-medium">Phone:</span> {bookingData.phoneNumber}</p>
@@ -93,7 +126,7 @@ function BookingSummary({ bookingData, onConfirm, onBack }) {
         {/* Booking Details Section */}
         <div className="border-b pb-4">
           <h3 className="text-lg font-medium mb-3">Booking Details</h3>
-          <div className="space-y-2">
+          <div className="space-y-2 text-sm lg:text-base">
             <p><span className="font-medium">Room:</span> {selectedRoom.name}</p>
             <p><span className="font-medium">Check-in:</span> {formatDate(bookingData.checkIn)}</p>
             <p><span className="font-medium">Check-out:</span> {formatDate(bookingData.checkOut)}</p>
@@ -104,10 +137,10 @@ function BookingSummary({ bookingData, onConfirm, onBack }) {
         {/* Cost Breakdown Section */}
         <div>
           <h3 className="text-lg font-medium mb-3">Total Cost Breakdown</h3>
-          <div className="space-y-3">
+          <div className="space-y-3 text-sm lg:text-base">
             {/* Room rate calculation */}
             <div className="flex justify-between">
-              <span>Room Rate ({nights} night{nights !== 1 ? 's' : ''} × ₱{selectedRoom.price.toLocaleString()})</span>
+              <span>Room Rate ({nights} night{nights !== 1 ? 's' : ''} × ₱{selectedRoom.price?.toLocaleString()})</span>
               <span>₱{roomTotal.toLocaleString()}</span>
             </div>
             
@@ -125,7 +158,7 @@ function BookingSummary({ bookingData, onConfirm, onBack }) {
             
             {/* Total amount */}
             <div className="border-t pt-3">
-              <div className="flex justify-between text-xl font-bold">
+              <div className="flex justify-between text-lg lg:text-xl font-bold">
                 <span>Total Amount</span>
                 <span>₱{total.toLocaleString()}</span>
               </div>

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
-import { rooms } from '../../data/roomsData';
+import { getRooms } from '../../services/roomService';
 
 /**
  * BookingForm component handles guest information and booking details
  * Includes comprehensive form validation and guest capacity checking
+ * Now integrated with API to load rooms
  * 
  * @param {Object} selectedRoom - Pre-selected room object (optional)
  * @param {Function} onSubmit - Callback function when form is submitted
@@ -23,6 +24,13 @@ function BookingForm({ selectedRoom, onSubmit }) {
   });
   
   const [errors, setErrors] = useState({}); // Form validation errors
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Load rooms from API
+  useEffect(() => {
+    loadRooms();
+  }, []);
 
   // Pre-select the room if one was passed from the room card
   useEffect(() => {
@@ -34,13 +42,25 @@ function BookingForm({ selectedRoom, onSubmit }) {
     }
   }, [selectedRoom]);
 
+  const loadRooms = async () => {
+    setLoading(true);
+    try {
+      const roomsData = await getRooms();
+      setRooms(roomsData);
+    } catch (error) {
+      console.error('Failed to load rooms:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   /**
    * Validate all form fields
    * @returns {boolean} True if form is valid, false otherwise
    */
   const validateForm = () => {
     const newErrors = {};
-    const selectedRoomData = rooms.find(room => room.id === parseInt(formData.roomType));
+    const selectedRoomData = rooms.find(room => room.id === formData.roomType);
     
     // Guest information validation
     if (!formData.guestFullName.trim()) newErrors.guestFullName = 'Guest full name is required';
@@ -89,26 +109,31 @@ function BookingForm({ selectedRoom, onSubmit }) {
   };
 
   // Get selected room data for capacity validation
-  const selectedRoomData = rooms.find(room => room.id === parseInt(formData.roomType));
+  const selectedRoomData = rooms.find(room => room.id === formData.roomType);
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-semibold mb-6">Booking Information</h2>
+    <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md">
+      <h2 className="text-xl lg:text-2xl font-semibold mb-6">Booking Information</h2>
       
       {/* Show selected room info if available */}
       {selectedRoom && (
         <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <h3 className="font-medium text-blue-800 mb-2">Selected Room</h3>
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
             <img 
-              src={selectedRoom.image} 
+              src={selectedRoom.images && selectedRoom.images.length > 0 
+                ? selectedRoom.images[0].url || selectedRoom.images[0] 
+                : 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg'} 
               alt={selectedRoom.name}
-              className="w-16 h-16 object-cover rounded"
+              className="w-full sm:w-16 h-32 sm:h-16 object-cover rounded"
+              onError={(e) => {
+                e.target.src = 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg';
+              }}
             />
-            <div>
+            <div className="flex-1">
               <p className="font-semibold">{selectedRoom.name}</p>
               <p className="text-sm text-gray-600">{selectedRoom.description}</p>
-              <p className="text-blue-600 font-medium">₱{selectedRoom.price.toLocaleString()}/night</p>
+              <p className="text-blue-600 font-medium">₱{selectedRoom.price?.toLocaleString()}/night</p>
               <p className="text-sm text-gray-500">Capacity: Up to {selectedRoom.capacity} guests</p>
             </div>
           </div>
@@ -120,7 +145,7 @@ function BookingForm({ selectedRoom, onSubmit }) {
         <div className="border-b pb-6">
           <h3 className="text-lg font-medium mb-4">Guest Information</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Guest full name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -172,7 +197,7 @@ function BookingForm({ selectedRoom, onSubmit }) {
         <div>
           <h3 className="text-lg font-medium mb-4">Booking Details</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
             {/* Room type selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -182,11 +207,12 @@ function BookingForm({ selectedRoom, onSubmit }) {
                 value={formData.roomType}
                 onChange={(e) => handleInputChange('roomType', e.target.value)}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                disabled={loading}
               >
                 <option value="">Select a room type</option>
                 {rooms.map(room => (
                   <option key={room.id} value={room.id}>
-                    {room.name} - ₱{room.price.toLocaleString()}/night (Up to {room.capacity} guests)
+                    {room.name} - ₱{room.price?.toLocaleString()}/night (Up to {room.capacity} guests)
                   </option>
                 ))}
               </select>
@@ -220,7 +246,7 @@ function BookingForm({ selectedRoom, onSubmit }) {
           </div>
 
           {/* Date selection */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Check-in date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -257,8 +283,9 @@ function BookingForm({ selectedRoom, onSubmit }) {
         <button
           type="submit"
           className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors font-semibold"
+          disabled={loading}
         >
-          Continue to Summary
+          {loading ? 'Loading...' : 'Continue to Summary'}
         </button>
       </form>
     </div>

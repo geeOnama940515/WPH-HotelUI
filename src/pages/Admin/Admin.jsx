@@ -193,48 +193,48 @@ function Admin() {
   const renderDashboard = () => (
     <div className="space-y-6">
       {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-md">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">₱{dashboardStats.totalRevenue.toLocaleString()}</p>
+              <p className="text-xl lg:text-2xl font-bold text-gray-900">₱{dashboardStats.totalRevenue.toLocaleString()}</p>
               <p className="text-sm text-green-600">+12% from last month</p>
             </div>
-            <FaDollarSign className="text-3xl text-green-500" />
+            <FaDollarSign className="text-2xl lg:text-3xl text-green-500" />
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">₱{dashboardStats.monthlyRevenue.toLocaleString()}</p>
+              <p className="text-xl lg:text-2xl font-bold text-gray-900">₱{dashboardStats.monthlyRevenue.toLocaleString()}</p>
               <p className="text-sm text-green-600">+8% from last month</p>
             </div>
-            <FaChartLine className="text-3xl text-blue-500" />
+            <FaChartLine className="text-2xl lg:text-3xl text-blue-500" />
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Bookings</p>
-              <p className="text-2xl font-bold text-gray-900">{dashboardStats.totalBookings}</p>
+              <p className="text-xl lg:text-2xl font-bold text-gray-900">{dashboardStats.totalBookings}</p>
               <p className="text-sm text-green-600">+15% from last month</p>
             </div>
-            <FaCalendarCheck className="text-3xl text-purple-500" />
+            <FaCalendarCheck className="text-2xl lg:text-3xl text-purple-500" />
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Occupancy Rate</p>
-              <p className="text-2xl font-bold text-gray-900">{dashboardStats.occupancyRate}%</p>
+              <p className="text-xl lg:text-2xl font-bold text-gray-900">{dashboardStats.occupancyRate}%</p>
               <p className="text-sm text-green-600">+5% from last month</p>
             </div>
-            <FaBed className="text-3xl text-orange-500" />
+            <FaBed className="text-2xl lg:text-3xl text-orange-500" />
           </div>
         </div>
       </div>
@@ -242,20 +242,20 @@ function Admin() {
       {/* Charts and Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Monthly Revenue Chart */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md">
           <h3 className="text-lg font-semibold mb-4">Monthly Revenue Trend</h3>
           <div className="space-y-3">
             {monthlyData.map((data, index) => (
               <div key={index} className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-600">{data.month}</span>
-                <div className="flex items-center space-x-3">
-                  <div className="w-32 bg-gray-200 rounded-full h-2">
+                <span className="text-sm font-medium text-gray-600 w-12">{data.month}</span>
+                <div className="flex items-center space-x-3 flex-1">
+                  <div className="w-full max-w-32 bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-blue-600 h-2 rounded-full" 
                       style={{ width: `${(data.revenue / 600000) * 100}%` }}
                     ></div>
                   </div>
-                  <span className="text-sm font-semibold">₱{(data.revenue / 1000).toFixed(0)}K</span>
+                  <span className="text-sm font-semibold whitespace-nowrap">₱{(data.revenue / 1000).toFixed(0)}K</span>
                 </div>
               </div>
             ))}
@@ -263,7 +263,7 @@ function Admin() {
         </div>
 
         {/* Room Status Overview */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md">
           <h3 className="text-lg font-semibold mb-4">Room Status Overview</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
@@ -301,28 +301,28 @@ function Admin() {
 
       {/* Recent Bookings */}
       <div className="bg-white rounded-lg shadow-md">
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-4 lg:p-6 border-b border-gray-200">
           <h3 className="text-lg font-semibold">Recent Bookings</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guest</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-in</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guest</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-in</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {recentBookings.slice(0, 5).map((booking) => (
                 <tr key={booking.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap font-medium">{booking.guestName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-600">{booking.roomName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-600">{booking.checkIn}</td>
-                  <td className="px-6 py-4 whitespace-nowrap font-semibold">₱{booking.totalAmount.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap font-medium text-sm">{booking.guestName}</td>
+                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-gray-600 text-sm">{booking.roomName}</td>
+                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-gray-600 text-sm">{booking.checkIn}</td>
+                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap font-semibold text-sm">₱{booking.totalAmount.toLocaleString()}</td>
+                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(booking.status)}`}>
                       {booking.status}
                     </span>
@@ -335,23 +335,23 @@ function Admin() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <FaUsers className="text-4xl text-blue-500 mx-auto mb-3" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md text-center">
+          <FaUsers className="text-3xl lg:text-4xl text-blue-500 mx-auto mb-3" />
           <h4 className="text-lg font-semibold mb-2">Average Stay</h4>
-          <p className="text-2xl font-bold text-gray-900">{dashboardStats.averageStayDuration} days</p>
+          <p className="text-xl lg:text-2xl font-bold text-gray-900">{dashboardStats.averageStayDuration} days</p>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <FaArrowUp className="text-4xl text-green-500 mx-auto mb-3" />
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md text-center">
+          <FaArrowUp className="text-3xl lg:text-4xl text-green-500 mx-auto mb-3" />
           <h4 className="text-lg font-semibold mb-2">Growth Rate</h4>
-          <p className="text-2xl font-bold text-green-600">+12%</p>
+          <p className="text-xl lg:text-2xl font-bold text-green-600">+12%</p>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <FaCalendarCheck className="text-4xl text-purple-500 mx-auto mb-3" />
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md text-center">
+          <FaCalendarCheck className="text-3xl lg:text-4xl text-purple-500 mx-auto mb-3" />
           <h4 className="text-lg font-semibold mb-2">This Month</h4>
-          <p className="text-2xl font-bold text-gray-900">{dashboardStats.monthlyBookings} bookings</p>
+          <p className="text-xl lg:text-2xl font-bold text-gray-900">{dashboardStats.monthlyBookings} bookings</p>
         </div>
       </div>
     </div>
@@ -359,18 +359,18 @@ function Admin() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+      <h1 className="text-2xl lg:text-3xl font-bold mb-6">Admin Dashboard</h1>
       
       <div className="mb-6">
         <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
+          <nav className="-mb-px flex space-x-4 lg:space-x-8 overflow-x-auto">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`${
                 activeTab === 'dashboard'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium`}
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm lg:text-base`}
             >
               Dashboard
             </button>
@@ -380,7 +380,7 @@ function Admin() {
                 activeTab === 'bookings'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium`}
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm lg:text-base`}
             >
               Bookings
             </button>
@@ -390,7 +390,7 @@ function Admin() {
                 activeTab === 'rooms'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium`}
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm lg:text-base`}
             >
               Rooms
             </button>
@@ -402,64 +402,66 @@ function Admin() {
 
       {activeTab === 'bookings' && (
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guest</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-in</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-out</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {bookings.map((booking) => (
-                <tr key={booking.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">{booking.guestName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{booking.roomName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{booking.checkIn}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{booking.checkOut}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">₱{booking.totalAmount.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(booking.status)}`}>
-                      {booking.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <select
-                      onChange={(e) => handleStatusChange(booking.id, e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      defaultValue={booking.status}
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="confirmed">Confirmed</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guest</th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-in</th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-out</th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {bookings.map((booking) => (
+                  <tr key={booking.id}>
+                    <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">{booking.guestName}</td>
+                    <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">{booking.roomName}</td>
+                    <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">{booking.checkIn}</td>
+                    <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">{booking.checkOut}</td>
+                    <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">₱{booking.totalAmount.toLocaleString()}</td>
+                    <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(booking.status)}`}>
+                        {booking.status}
+                      </span>
+                    </td>
+                    <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                      <select
+                        onChange={(e) => handleStatusChange(booking.id, e.target.value)}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                        defaultValue={booking.status}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {activeTab === 'rooms' && !showRoomForm && (
         <div>
-          <div className="mb-4 flex justify-between items-center">
+          <div className="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <button
               onClick={() => {
                 setEditingRoom(null);
                 setShowRoomForm(true);
               }}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 w-full sm:w-auto"
             >
               Add New Room
             </button>
             
             {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded">
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded text-sm">
                 {error}
               </div>
             )}
@@ -472,55 +474,57 @@ function Admin() {
             </div>
           ) : (
             <div className="bg-white shadow-md rounded-lg overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {rooms.map((room) => (
-                    <tr key={room.id}>
-                      <td className="px-6 py-4 whitespace-nowrap font-medium">{room.name}</td>
-                      <td className="px-6 py-4 max-w-xs truncate">{room.description}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">₱{room.price?.toLocaleString()}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{room.capacity} guests</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <select
-                          onChange={(e) => handleRoomStatusChange(room.id, e.target.value)}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                          value={room.status || 0}
-                        >
-                          <option value="0">Available</option>
-                          <option value="1">Occupied</option>
-                          <option value="2">Maintenance</option>
-                        </select>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleEditRoom(room)}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteRoom(room.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room Name</th>
+                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Description</th>
+                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
+                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {rooms.map((room) => (
+                      <tr key={room.id}>
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap font-medium text-sm">{room.name}</td>
+                        <td className="px-4 lg:px-6 py-4 max-w-xs truncate text-sm hidden md:table-cell">{room.description}</td>
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">₱{room.price?.toLocaleString()}</td>
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">{room.capacity}</td>
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                          <select
+                            onChange={(e) => handleRoomStatusChange(room.id, e.target.value)}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                            value={room.status || 0}
+                          >
+                            <option value="0">Available</option>
+                            <option value="1">Occupied</option>
+                            <option value="2">Maintenance</option>
+                          </select>
+                        </td>
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <button
+                              onClick={() => handleEditRoom(room)}
+                              className="text-blue-600 hover:text-blue-900 text-sm"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteRoom(room.id)}
+                              className="text-red-600 hover:text-red-900 text-sm"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
               
               {rooms.length === 0 && !loading && (
                 <div className="p-8 text-center text-gray-500">
@@ -533,7 +537,7 @@ function Admin() {
       )}
 
       {activeTab === 'rooms' && showRoomForm && (
-        <div className="bg-white shadow-md rounded-lg p-6">
+        <div className="bg-white shadow-md rounded-lg p-4 lg:p-6">
           <h2 className="text-xl font-semibold mb-4">
             {editingRoom ? 'Edit Room' : 'Add New Room'}
           </h2>
