@@ -4,7 +4,7 @@ services:
   web:
     build: .
     ports:
-      - "4173:4173"
+      - "4174:4174"
     environment:
       - NODE_ENV=production
       - VITE_API_URL=http://localhost:3000

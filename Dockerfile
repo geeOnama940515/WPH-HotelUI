@@ -12,6 +12,6 @@ RUN npm run build
 
 ENV VITE_API_URL=http://localhost:3000
 
-EXPOSE 4173
+EXPOSE 4174
 
 CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "4173"]
