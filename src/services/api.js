@@ -5,6 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5187';
  * Custom fetch wrapper with authentication and error handling
  * Automatically includes JWT token in requests and handles common errors
  * Updated to handle Result<T> wrapper pattern from backend
+ * Now includes automatic token refresh on 401 errors
  * 
  * @param {string} endpoint - API endpoint to call
  * @param {Object} options - Fetch options (method, headers, body, etc.)
@@ -33,6 +34,39 @@ const customFetch = async (endpoint, options = {}) => {
     // Make the API request
     const response = await fetch(`${API_URL}${endpoint}`, config);
     
+    // Handle 401 Unauthorized - try to refresh token
+    if (response.status === 401 && token) {
+      try {
+        const { refreshToken } = await import('./authService');
+        const newToken = await refreshToken();
+        
+        // Retry the request with new token
+        config.headers.Authorization = `Bearer ${newToken}`;
+        const retryResponse = await fetch(`${API_URL}${endpoint}`, config);
+        
+        if (!retryResponse.ok) {
+          throw new Error(`HTTP ${retryResponse.status}: ${retryResponse.statusText}`);
+        }
+        
+        const retryResult = await retryResponse.json();
+        
+        if (!retryResult.isSuccess) {
+          const errorMessage = retryResult.message || 
+                              (retryResult.errors && retryResult.errors.length > 0 ? retryResult.errors.join(', ') : '') ||
+                              'Request failed';
+          throw new Error(errorMessage);
+        }
+        
+        return retryResult.data;
+      } catch (refreshError) {
+        // If refresh fails, logout and redirect to login
+        const { logout } = await import('./authService');
+        await logout();
+        window.location.href = '/auth';
+        throw new Error('Session expired. Please login again.');
+      }
+    }
+
     // Parse JSON response
     const result = await response.json();
     
@@ -113,6 +147,43 @@ export const api = {
         },
         body: formData
       });
+
+      // Handle 401 Unauthorized for file uploads too
+      if (response.status === 401 && token) {
+        try {
+          const { refreshToken } = await import('./authService');
+          const newToken = await refreshToken();
+          
+          // Retry the request with new token
+          const retryResponse = await fetch(`${API_URL}${endpoint}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${newToken}`
+            },
+            body: formData
+          });
+          
+          if (!retryResponse.ok) {
+            throw new Error(`HTTP ${retryResponse.status}: ${retryResponse.statusText}`);
+          }
+          
+          const retryResult = await retryResponse.json();
+          
+          if (!retryResult.isSuccess) {
+            const errorMessage = retryResult.message || 
+                                (retryResult.errors && retryResult.errors.length > 0 ? retryResult.errors.join(', ') : '') ||
+                                'Upload failed';
+            throw new Error(errorMessage);
+          }
+          
+          return retryResult.data;
+        } catch (refreshError) {
+          const { logout } = await import('./authService');
+          await logout();
+          window.location.href = '/auth';
+          throw new Error('Session expired. Please login again.');
+        }
+      }
 
       const result = await response.json();
       
