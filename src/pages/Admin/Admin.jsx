@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import RoomForm from '../../components/RoomForm/RoomForm';
+import { getRooms, deleteRoom, updateRoomStatus } from '../../services/roomService';
 import { FaUsers, FaDollarSign, FaBed, FaCalendarCheck, FaArrowUp, FaChartLine } from 'react-icons/fa';
 
 function Admin() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showRoomForm, setShowRoomForm] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -19,8 +23,8 @@ function Admin() {
     monthlyBookings: 32,
     occupancyRate: 78,
     averageStayDuration: 2.4,
-    totalRooms: 3,
-    availableRooms: 2
+    totalRooms: rooms.length,
+    availableRooms: rooms.filter(room => room.status === 'Available').length
   };
 
   const recentBookings = [
@@ -62,37 +66,6 @@ function Admin() {
     { month: 'Jun', revenue: 510000, bookings: 34 }
   ];
 
-  // Dummy data for demonstration
-  const [rooms, setRooms] = useState([
-    {
-      id: 1,
-      name: "Deluxe King Room",
-      description: "Spacious room with king-size bed and city view",
-      price: 9950,
-      capacity: 2,
-      status: "available",
-      image: "https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg"
-    },
-    {
-      id: 2,
-      name: "Executive Suite",
-      description: "Luxury suite with separate living area",
-      price: 14950,
-      capacity: 3,
-      status: "occupied",
-      image: "https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg"
-    },
-    {
-      id: 3,
-      name: "Family Room",
-      description: "Perfect for families with two queen beds",
-      price: 12450,
-      capacity: 4,
-      status: "available",
-      image: "https://images.pexels.com/photos/237371/pexels-photo-237371.jpeg"
-    }
-  ]);
-
   const bookings = [
     {
       id: 1,
@@ -114,29 +87,57 @@ function Admin() {
     }
   ];
 
-  React.useEffect(() => {
+  // Load rooms from API
+  useEffect(() => {
+    if (activeTab === 'rooms') {
+      loadRooms();
+    }
+  }, [activeTab]);
+
+  // Check admin access
+  useEffect(() => {
     if (!user?.isAdmin) {
       navigate('/');
     }
   }, [user, navigate]);
 
+  /**
+   * Load rooms from API
+   */
+  const loadRooms = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const roomsData = await getRooms();
+      setRooms(roomsData);
+    } catch (error) {
+      console.error('Failed to load rooms:', error);
+      setError('Failed to load rooms. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleStatusChange = (bookingId, newStatus) => {
     console.log(`Updating booking ${bookingId} status to ${newStatus}`);
   };
 
-  const handleRoomStatusChange = (roomId, newStatus) => {
-    setRooms(rooms.map(room => 
-      room.id === roomId ? { ...room, status: newStatus } : room
-    ));
+  const handleRoomStatusChange = async (roomId, newStatus) => {
+    try {
+      await updateRoomStatus(roomId, newStatus);
+      // Update local state
+      setRooms(rooms.map(room => 
+        room.id === roomId ? { ...room, status: newStatus } : room
+      ));
+    } catch (error) {
+      console.error('Failed to update room status:', error);
+      alert('Failed to update room status. Please try again.');
+    }
   };
 
   const handleAddRoom = (roomData) => {
-    const newRoom = {
-      id: rooms.length + 1,
-      ...roomData
-    };
-    setRooms([...rooms, newRoom]);
     setShowRoomForm(false);
+    loadRooms(); // Reload rooms to get the latest data
   };
 
   const handleEditRoom = (room) => {
@@ -145,16 +146,20 @@ function Admin() {
   };
 
   const handleUpdateRoom = (roomData) => {
-    setRooms(rooms.map(room => 
-      room.id === editingRoom.id ? { ...roomData, id: room.id } : room
-    ));
     setShowRoomForm(false);
     setEditingRoom(null);
+    loadRooms(); // Reload rooms to get the latest data
   };
 
-  const handleDeleteRoom = (roomId) => {
+  const handleDeleteRoom = async (roomId) => {
     if (window.confirm('Are you sure you want to delete this room?')) {
-      setRooms(rooms.filter(room => room.id !== roomId));
+      try {
+        await deleteRoom(roomId);
+        setRooms(rooms.filter(room => room.id !== roomId));
+      } catch (error) {
+        console.error('Failed to delete room:', error);
+        alert('Failed to delete room. Please try again.');
+      }
     }
   };
 
@@ -163,6 +168,15 @@ function Admin() {
       case 'confirmed': return 'bg-green-100 text-green-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getRoomStatusColor = (status) => {
+    switch (status) {
+      case 'Available': return 'bg-green-100 text-green-800';
+      case 'Occupied': return 'bg-red-100 text-red-800';
+      case 'Maintenance': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -249,7 +263,7 @@ function Admin() {
                 <span className="font-medium">Available Rooms</span>
               </div>
               <span className="text-lg font-bold text-green-600">
-                {rooms.filter(room => room.status === 'available').length}
+                {rooms.filter(room => room.status === 'Available').length}
               </span>
             </div>
             
@@ -259,7 +273,7 @@ function Admin() {
                 <span className="font-medium">Occupied Rooms</span>
               </div>
               <span className="text-lg font-bold text-red-600">
-                {rooms.filter(room => room.status === 'occupied').length}
+                {rooms.filter(room => room.status === 'Occupied').length}
               </span>
             </div>
             
@@ -269,7 +283,7 @@ function Admin() {
                 <span className="font-medium">Maintenance</span>
               </div>
               <span className="text-lg font-bold text-yellow-600">
-                {rooms.filter(room => room.status === 'maintenance').length}
+                {rooms.filter(room => room.status === 'Maintenance').length}
               </span>
             </div>
           </div>
@@ -424,7 +438,7 @@ function Admin() {
 
       {activeTab === 'rooms' && !showRoomForm && (
         <div>
-          <div className="mb-4">
+          <div className="mb-4 flex justify-between items-center">
             <button
               onClick={() => {
                 setEditingRoom(null);
@@ -434,58 +448,78 @@ function Admin() {
             >
               Add New Room
             </button>
+            
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded">
+                {error}
+              </div>
+            )}
           </div>
-          <div className="bg-white shadow-md rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {rooms.map((room) => (
-                  <tr key={room.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">{room.name}</td>
-                    <td className="px-6 py-4">{room.description}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">₱{room.price.toLocaleString()}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{room.capacity} guests</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        onChange={(e) => handleRoomStatusChange(room.id, e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        value={room.status}
-                      >
-                        <option value="available">Available</option>
-                        <option value="occupied">Occupied</option>
-                        <option value="maintenance">Maintenance</option>
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEditRoom(room)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteRoom(room.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
+
+          {loading ? (
+            <div className="bg-white p-8 rounded-lg shadow-md text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p>Loading rooms...</p>
+            </div>
+          ) : (
+            <div className="bg-white shadow-md rounded-lg overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {rooms.map((room) => (
+                    <tr key={room.id}>
+                      <td className="px-6 py-4 whitespace-nowrap font-medium">{room.name}</td>
+                      <td className="px-6 py-4 max-w-xs truncate">{room.description}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">₱{room.price?.toLocaleString()}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{room.capacity} guests</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <select
+                          onChange={(e) => handleRoomStatusChange(room.id, e.target.value)}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          value={room.status || 'Available'}
+                        >
+                          <option value="Available">Available</option>
+                          <option value="Occupied">Occupied</option>
+                          <option value="Maintenance">Maintenance</option>
+                        </select>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEditRoom(room)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteRoom(room.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              
+              {rooms.length === 0 && !loading && (
+                <div className="p-8 text-center text-gray-500">
+                  No rooms found. Add your first room to get started.
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

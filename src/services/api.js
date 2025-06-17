@@ -1,5 +1,5 @@
 // Base API URL from environment variables or fallback to localhost
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5187';
 
 /**
  * Custom fetch wrapper with authentication and error handling
@@ -34,8 +34,14 @@ const customFetch = async (endpoint, options = {}) => {
     
     // Handle non-successful responses
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Something went wrong');
+      let errorMessage = 'Something went wrong';
+      try {
+        const error = await response.json();
+        errorMessage = error.message || error.title || errorMessage;
+      } catch {
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
     }
 
     // Return parsed JSON response
@@ -87,5 +93,36 @@ export const api = {
    */
   delete: (endpoint) => customFetch(endpoint, {
     method: 'DELETE'
-  })
+  }),
+
+  /**
+   * POST request for file uploads
+   * @param {string} endpoint - API endpoint
+   * @param {FormData} formData - Form data with files
+   * @returns {Promise<Object>} Response data
+   */
+  postFile: (endpoint, formData) => {
+    const token = localStorage.getItem('token');
+    
+    return fetch(`${API_URL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        // Don't set Content-Type for FormData, let browser set it with boundary
+      },
+      body: formData
+    }).then(async response => {
+      if (!response.ok) {
+        let errorMessage = 'Upload failed';
+        try {
+          const error = await response.json();
+          errorMessage = error.message || error.title || errorMessage;
+        } catch {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
+      return response.json();
+    });
+  }
 };

@@ -1,27 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { FaWifi, FaTv, FaSnowflake, FaCoffee, FaBed, FaBath, FaUsers, FaArrowLeft, FaTimes, FaChevronLeft, FaChevronRight, FaPlay, FaPause } from 'react-icons/fa';
-import { rooms, getRoomImages } from '../../data/roomsData';
+import { getRoomById } from '../../services/roomService';
 
 /**
  * RoomDetails component displays detailed information about a specific room
  * Features an auto-changing image gallery with manual controls
- * Now supports multiple room images from the updated data structure
+ * Now integrated with API to fetch room data
  * 
  * @returns {JSX.Element} Room details page with image gallery
  */
 function RoomDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const room = rooms.find(r => r.id === parseInt(id));
+  
+  // Room data state
+  const [room, setRoom] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   
   // Gallery state
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Get all room images using the helper function
-  const roomImages = room ? getRoomImages(room) : [];
+  // Load room data from API
+  useEffect(() => {
+    loadRoom();
+  }, [id]);
+
+  const loadRoom = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const roomData = await getRoomById(id);
+      setRoom(roomData);
+    } catch (error) {
+      console.error('Failed to load room:', error);
+      setError('Failed to load room details. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Get room images - handle both API structure and fallback
+  const roomImages = room?.images && room.images.length > 0 
+    ? room.images.map(img => img.url || img)
+    : ['https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg']; // Fallback image
 
   // Auto-change images every 4 seconds
   useEffect(() => {
@@ -99,19 +124,40 @@ function RoomDetails() {
     setIsModalOpen(true);
   };
 
-  if (!room) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <span className="ml-4 text-lg">Loading room details...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !room) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
           <div className="bg-white p-8 rounded-lg shadow-md text-center">
             <h1 className="text-2xl font-bold mb-4">Room Not Found</h1>
-            <p className="text-gray-600 mb-6">The room you're looking for doesn't exist.</p>
-            <Link
-              to="/rooms"
-              className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors font-semibold"
-            >
-              Back to Rooms
-            </Link>
+            <p className="text-gray-600 mb-6">{error || "The room you're looking for doesn't exist."}</p>
+            <div className="space-x-4">
+              <Link
+                to="/rooms"
+                className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors font-semibold"
+              >
+                Back to Rooms
+              </Link>
+              <button
+                onClick={loadRoom}
+                className="bg-gray-200 text-gray-800 px-6 py-3 rounded-md hover:bg-gray-300 transition-colors font-semibold"
+              >
+                Try Again
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -160,6 +206,10 @@ function RoomDetails() {
                 alt={`${room.name} - Image ${currentImageIndex + 1}`}
                 className="w-full h-full object-cover transition-opacity duration-500 cursor-pointer"
                 onClick={openModal}
+                onError={(e) => {
+                  // Fallback if image fails to load
+                  e.target.src = 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg';
+                }}
               />
               
               {/* Image overlay with room info */}
@@ -234,6 +284,9 @@ function RoomDetails() {
                         src={image}
                         alt={`Thumbnail ${index + 1}`}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg';
+                        }}
                       />
                     </button>
                   ))}
@@ -295,7 +348,7 @@ function RoomDetails() {
                 <div className="bg-gray-50 p-6 rounded-lg sticky top-4">
                   <div className="text-center mb-6">
                     <div className="text-3xl font-bold text-blue-600 mb-2">
-                      ₱{room.price.toLocaleString()}
+                      ₱{room.price?.toLocaleString()}
                     </div>
                     <div className="text-gray-600">per night</div>
                   </div>
@@ -333,39 +386,6 @@ function RoomDetails() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Similar Rooms Section */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold mb-6">Similar Rooms</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {rooms
-              .filter(r => r.id !== room.id)
-              .slice(0, 3)
-              .map(similarRoom => (
-                <div key={similarRoom.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                  <img
-                    src={similarRoom.image1 || similarRoom.image}
-                    alt={similarRoom.name}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold mb-2">{similarRoom.name}</h3>
-                    <p className="text-gray-600 text-sm mb-3">{similarRoom.description}</p>
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="text-lg font-bold">₱{similarRoom.price.toLocaleString()}/night</span>
-                      <span className="text-gray-500 text-sm">Up to {similarRoom.capacity} guests</span>
-                    </div>
-                    <Link
-                      to={`/room-details/${similarRoom.id}`}
-                      className="block w-full bg-gray-200 text-gray-800 text-center py-2 rounded-md hover:bg-gray-300 transition-colors"
-                    >
-                      View Details
-                    </Link>
-                  </div>
-                </div>
-              ))}
           </div>
         </div>
       </div>
@@ -413,6 +433,9 @@ function RoomDetails() {
               src={roomImages[currentImageIndex]}
               alt={`${room.name} - Image ${currentImageIndex + 1}`}
               className="max-w-full max-h-full object-contain rounded-lg"
+              onError={(e) => {
+                e.target.src = 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg';
+              }}
             />
           </div>
 
@@ -438,6 +461,9 @@ function RoomDetails() {
                     src={image}
                     alt={`Thumbnail ${index + 1}`}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg';
+                    }}
                   />
                 </button>
               ))}

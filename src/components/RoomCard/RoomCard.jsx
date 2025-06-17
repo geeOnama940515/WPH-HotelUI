@@ -4,25 +4,35 @@ import { Link } from 'react-router-dom';
 /**
  * RoomCard component displays room information in a card format
  * Used in the rooms listing page to show available rooms
+ * Now supports API data structure with images array
  * 
  * @param {Object} room - Room object with details
- * @param {number} room.id - Room ID
+ * @param {string} room.id - Room ID
  * @param {string} room.name - Room name
  * @param {string} room.description - Room description
  * @param {number} room.price - Room price per night
- * @param {string} room.image - Room image URL
+ * @param {Array} room.images - Array of room images
  * @param {number} room.capacity - Maximum number of guests
  */
 function RoomCard({ room }) {
-  const { id, name, description, price, image, capacity } = room;
+  const { id, name, description, price, images, capacity } = room;
+
+  // Get the primary image (first image or fallback)
+  const primaryImage = images && images.length > 0 
+    ? images[0].url || images[0] 
+    : 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg'; // Fallback image
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-full">
       {/* Room image */}
       <img 
-        src={image} 
+        src={primaryImage} 
         alt={name} 
         className="w-full h-48 object-cover"
+        onError={(e) => {
+          // Fallback if image fails to load
+          e.target.src = 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg';
+        }}
       />
       
       {/* Room information */}
@@ -32,7 +42,7 @@ function RoomCard({ room }) {
         
         {/* Price and capacity information */}
         <div className="flex justify-between items-center mb-4">
-          <span className="text-lg font-bold">₱{price.toLocaleString()}/night</span>
+          <span className="text-lg font-bold">₱{price?.toLocaleString()}/night</span>
           <span className="text-gray-500">Up to {capacity} guests</span>
         </div>
         
@@ -48,4 +58,4 @@ function RoomCard({ room }) {
   );
 }
 
-export default RoomCard
+export default RoomCard;
