@@ -10,7 +10,7 @@ COPY . .
 
 RUN npm run build
 
-ENV VITE_API_URL=http://localhost:3000
+ENV VITE_API_URL=https://wph-backend.gregdoesdev.xyz
 
 EXPOSE 4174
 

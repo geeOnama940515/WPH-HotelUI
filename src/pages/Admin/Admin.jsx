@@ -180,7 +180,7 @@ function Admin() {
       ];
       
       if (!results.connectivity) {
-        alert('❌ API connectivity failed. Please check if your backend is running on http://localhost:5187');
+        alert('❌ API connectivity failed. Please check if your backend is running on https://wph-backend.gregdoesdev.xyz');
       } else if (failedEndpoints.length > 0) {
         alert(`⚠️ API connected but ${failedEndpoints.length} endpoints returned 405 Method Not Allowed. Check console for details.`);
       } else {

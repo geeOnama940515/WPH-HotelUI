@@ -1,7 +1,7 @@
 // API Test Utility
 // This file helps test backend connectivity and available endpoints
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5187';
+const API_URL = import.meta.env.VITE_API_URL || 'https://wph-backend.gregdoesdev.xyz';
 
 /**
  * Test basic API connectivity

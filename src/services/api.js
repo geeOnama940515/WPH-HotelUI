@@ -1,5 +1,5 @@
-// Base API URL from environment variables or fallback to localhost
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5187';
+// Base API URL from environment variables or fallback to production URL
+const API_URL = import.meta.env.VITE_API_URL || 'https://wph-backend.gregdoesdev.xyz';
 
 /**
  * Custom fetch wrapper with authentication and error handling

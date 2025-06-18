@@ -15,7 +15,7 @@ import { api } from './api';
 export const login = async (email, password) => {
   try {
     // Make API call to login endpoint
-    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5187'}/api/auth/login`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://wph-backend.gregdoesdev.xyz'}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -73,7 +73,7 @@ export const login = async (email, password) => {
 export const register = async (userData) => {
   try {
     // Make API call to register endpoint
-    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5187'}/api/auth/register`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://wph-backend.gregdoesdev.xyz'}/api/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -128,7 +128,7 @@ export const refreshToken = async () => {
       throw new Error('No refresh token available');
     }
 
-    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5187'}/api/auth/refresh-token`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://wph-backend.gregdoesdev.xyz'}/api/auth/refresh-token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -161,7 +161,7 @@ export const revokeToken = async () => {
   try {
     const refreshToken = localStorage.getItem('refreshToken');
     if (refreshToken) {
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5187'}/api/auth/revoke-token`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'https://wph-backend.gregdoesdev.xyz'}/api/auth/revoke-token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
