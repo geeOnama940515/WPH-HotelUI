@@ -56,7 +56,7 @@ export const createRoom = async (roomData) => {
     });
   }
   
-  return api.postFile('/api/rooms/with-images', formData);
+  return api.postFile('/api/room/with-images', formData);
 };
 
 /**
@@ -98,7 +98,7 @@ export const uploadRoomImages = async (roomId, imageFiles) => {
   // Add image files - use 'files' to match backend controller parameter
   imageFiles.forEach((file, index) => {
     if (file) {
-      formData.append('files', file);
+      formData.append('Files', file);
     }
   });
   

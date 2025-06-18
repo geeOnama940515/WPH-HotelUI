@@ -149,7 +149,7 @@ function BookingForm({ selectedRoom, onSubmit }) {
           <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
             <img 
               src={selectedRoom.images && selectedRoom.images.length > 0 && selectedRoom.images[0].fileName
-                ? `/images/rooms/${selectedRoom.images[0].fileName}`
+                ? `https://wph-backend.gregdoesdev.xyz/images/rooms/${selectedRoom.images[0].fileName}`
                 : 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg'} 
               alt={selectedRoom.name}
               className="w-full sm:w-16 h-32 sm:h-16 object-cover rounded"

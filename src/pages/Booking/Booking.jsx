@@ -191,7 +191,7 @@ function Booking() {
             {rooms.map(room => {
               // Get the primary image for the room (first image's fileName or fallback)
               const primaryImage = room.images && room.images.length > 0 && room.images[0].fileName
-                ? `/images/rooms/${room.images[0].fileName}`
+                ? `https://wph-backend.gregdoesdev.xyz/images/rooms/${room.images[0].fileName}`
                 : 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg';
 
               return (

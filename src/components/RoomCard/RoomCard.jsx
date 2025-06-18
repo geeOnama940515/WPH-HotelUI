@@ -21,7 +21,7 @@ function RoomCard({ room }) {
   let primaryImage = 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg';
   if (images && images.length > 0 && images[0].fileName) {
     // If your backend serves images at a specific path, update the URL below:
-    primaryImage = `/images/rooms/${images[0].fileName}`;
+    primaryImage = `https://wph-backend.gregdoesdev.xyz/images/rooms/${images[0].fileName}`;
   }
 
   return (
