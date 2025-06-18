@@ -34,6 +34,8 @@ function RoomDetails() {
     setError('');
     try {
       const roomData = await getRoomById(id);
+      console.log('Room data received:', roomData);
+      console.log('Room images:', roomData?.images);
       setRoom(roomData);
     } catch (error) {
       console.error('Failed to load room:', error);
@@ -45,7 +47,12 @@ function RoomDetails() {
 
   // Get room images - handle both API structure and fallback
   const roomImages = room?.images && room.images.length > 0
-    ? room.images.map(img => img.fileName ? `https://wph-backend.gregdoesdev.xyz/images/rooms/${img.fileName}` : img.url || img)
+    ? room.images.map(img => {
+        console.log('Processing image:', img);
+        const imageUrl = img.fileName ? `https://wph-backend.gregdoesdev.xyz/images/rooms/${img.fileName}` : img.url || img;
+        console.log('Generated image URL:', imageUrl);
+        return imageUrl;
+      })
     : ['https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg']; // Fallback image
 
   // Auto-change images every 4 seconds

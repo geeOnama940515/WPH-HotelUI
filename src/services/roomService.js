@@ -27,7 +27,15 @@ export const getRooms = async () => {
  * @param {string} roomId - Room ID
  * @returns {Promise<Object>} Room object
  */
-export const getRoomById = (roomId) => api.get(`/api/room/${roomId}`);
+export const getRoomById = async (roomId) => {
+  const response = await api.get(`/api/room/${roomId}`);
+  
+  // The response is double-wrapped, so we need to access response.data.data
+  console.log('getRoomById response (unwrapped):', response);
+  console.log('getRoomById response.data:', response.data);
+  
+  return response.data;
+};
 
 /**
  * Create a new room with images (admin function)
@@ -52,7 +60,7 @@ export const createRoom = async (roomData) => {
   // Add image files if any
   if (roomData.images && roomData.images.length > 0) {
     roomData.images.forEach((file) => {
-      formData.append('files', file);
+      formData.append('Images', file);
     });
   }
   
