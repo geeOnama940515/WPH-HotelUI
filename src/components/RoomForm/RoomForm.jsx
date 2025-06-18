@@ -24,6 +24,12 @@ function RoomForm({ room, onSubmit, onCancel }) {
   // Image upload state
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
+  
+  // Track existing images separately for editing
+  const [existingImages, setExistingImages] = useState([]);
+  
+  // Track which previews correspond to existing vs new images
+  const [imageSourceMap, setImageSourceMap] = useState([]);
 
   // Loading state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,7 +61,21 @@ function RoomForm({ room, onSubmit, onCancel }) {
           return img.url || img;
         });
         setImagePreviews(existingImageUrls);
+        setExistingImages(room.images); // Store original image data
+        
+        // Track that all these are existing images
+        const sourceMap = existingImageUrls.map(() => 'existing');
+        setImageSourceMap(sourceMap);
+      } else {
+        setImagePreviews([]);
+        setExistingImages([]);
+        setImageSourceMap([]);
       }
+    } else {
+      // Reset for new room
+      setImagePreviews([]);
+      setExistingImages([]);
+      setImageSourceMap([]);
     }
   }, [room]);
 
@@ -93,6 +113,10 @@ function RoomForm({ room, onSubmit, onCancel }) {
     // Create preview URLs for new files and append to existing previews
     const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file));
     setImagePreviews([...imagePreviews, ...newPreviewUrls]);
+    
+    // Track new images in source map
+    const newSourceMap = newPreviewUrls.map(() => 'new');
+    setImageSourceMap([...imageSourceMap, ...newSourceMap]);
   };
 
   /**
@@ -100,17 +124,43 @@ function RoomForm({ room, onSubmit, onCancel }) {
    * @param {number} index - Index of image to remove
    */
   const removeImage = (index) => {
-    const newFiles = imageFiles.filter((_, i) => i !== index);
-    const newPreviews = imagePreviews.filter((_, i) => i !== index);
+    console.log('Removing image at index:', index);
+    console.log('Image source:', imageSourceMap[index]);
+    console.log('Current existing images:', existingImages.length);
+    console.log('Current new images:', imageFiles.length);
     
-    // Only revoke blob URLs (new uploads), not existing image URLs
-    const removedPreview = imagePreviews[index];
-    if (removedPreview && removedPreview.startsWith('blob:')) {
+    const newPreviews = imagePreviews.filter((_, i) => i !== index);
+    const newSourceMap = imageSourceMap.filter((_, i) => i !== index);
+    
+    // Determine if we're removing an existing image or a new file
+    const imageSource = imageSourceMap[index];
+    
+    if (imageSource === 'existing') {
+      // Remove from existing images - find the corresponding existing image
+      const removedPreview = imagePreviews[index];
+      const existingImageIndex = existingImages.findIndex(img => {
+        const imgUrl = img.fileName ? `https://wph-backend.gregdoesdev.xyz/images/rooms/${img.fileName}` : img.url || img;
+        return imgUrl === removedPreview;
+      });
+      
+      console.log('Removing existing image at index:', existingImageIndex);
+      
+      if (existingImageIndex !== -1) {
+        const newExistingImages = existingImages.filter((_, i) => i !== existingImageIndex);
+        setExistingImages(newExistingImages);
+        console.log('Updated existing images count:', newExistingImages.length);
+      }
+    } else if (imageSource === 'new') {
+      // Remove from new files and revoke blob URL
+      const removedPreview = imagePreviews[index];
+      const newFiles = imageFiles.filter((_, i) => i !== index);
+      setImageFiles(newFiles);
       URL.revokeObjectURL(removedPreview);
+      console.log('Removed new image, updated count:', newFiles.length);
     }
     
-    setImageFiles(newFiles);
     setImagePreviews(newPreviews);
+    setImageSourceMap(newSourceMap);
   };
 
   /**
@@ -125,9 +175,25 @@ function RoomForm({ room, onSubmit, onCancel }) {
       name: formData.name.trim(),
       description: formData.description.trim(),
       price: parseFloat(formData.price),
-      capacity: parseInt(formData.capacity),
-      images: imageFiles // Include image files for new room creation
+      capacity: parseInt(formData.capacity)
     };
+
+    // Include existing images that should be kept (for editing)
+    if (room && existingImages.length > 0) {
+      roomData.existingImages = existingImages;
+    }
+
+    // Only include new images if there are files to upload
+    if (imageFiles.length > 0) {
+      roomData.images = imageFiles;
+    }
+
+    // Log the state for debugging
+    console.log('Submit state:', {
+      existingImagesCount: existingImages.length,
+      newImagesCount: imageFiles.length,
+      totalPreviews: imagePreviews.length
+    });
 
     // Show confirmation modal
     setSaveModal({
@@ -146,16 +212,10 @@ function RoomForm({ room, onSubmit, onCancel }) {
       let result;
       
       if (room) {
-        // Update existing room
-        if (imageFiles.length > 0) {
-          // Use updateRoomWithImages if there are new images
-          result = await updateRoomWithImages(room.id, saveModal.formData);
-          showToast.success('Room and images updated successfully');
-        } else {
-          // Use regular updateRoom if no new images
-          result = await updateRoom(room.id, saveModal.formData);
-          showToast.success('Room updated successfully');
-        }
+        // Always use updateRoomWithImages when editing to handle existing images properly
+        // This ensures we can keep/remove existing images even when no new images are added
+        result = await updateRoomWithImages(room.id, saveModal.formData);
+        showToast.success('Room updated successfully');
       } else {
         // Create new room with images
         result = await createRoom(saveModal.formData);
