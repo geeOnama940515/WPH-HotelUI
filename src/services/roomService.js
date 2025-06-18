@@ -64,7 +64,34 @@ export const createRoom = async (roomData) => {
     });
   }
   
-  return api.postFile('/api/room/with-images', formData);
+  return api.uploadFile('/api/room/with-images', formData, 'POST');
+};
+
+/**
+ * Update existing room with images (admin function)
+ * 
+ * @param {string} roomId - Room ID to update
+ * @param {Object} roomData - Updated room information
+ * @param {Array<File>} roomData.images - Array of image files (optional)
+ * @returns {Promise<Object>} Updated room object
+ */
+export const updateRoomWithImages = async (roomId, roomData) => {
+  const formData = new FormData();
+  
+  // Add room data
+  formData.append('name', roomData.name);
+  formData.append('description', roomData.description || '');
+  formData.append('price', roomData.price);
+  formData.append('capacity', roomData.capacity);
+  
+  // Add image files if any
+  if (roomData.images && roomData.images.length > 0) {
+    roomData.images.forEach((file) => {
+      formData.append('NewImages', file);
+    });
+  }
+  
+  return api.uploadFile(`/api/room/${roomId}/with-images`, formData, 'PUT');
 };
 
 /**
@@ -103,14 +130,14 @@ export const deleteRoom = (roomId) => api.delete(`/api/room/${roomId}`);
 export const uploadRoomImages = async (roomId, imageFiles) => {
   const formData = new FormData();
   
-  // Add image files - use 'files' to match backend controller parameter
+  // Add image files - use 'Files' to match backend controller parameter
   imageFiles.forEach((file, index) => {
     if (file) {
       formData.append('Files', file);
     }
   });
   
-  return api.postFile(`/api/room/${roomId}/images`, formData);
+  return api.uploadFile(`/api/room/${roomId}/images`, formData, 'POST');
 };
 
 /**
@@ -121,6 +148,7 @@ export const uploadRoomImages = async (roomId, imageFiles) => {
  * @returns {Promise<Object>} Updated room object
  */
 export const updateRoomStatus = (roomId, status) => {
+  console.log(`roomId : ${roomId} + status ${status}`);
   return api.put(`/api/room/${roomId}/status`, { 
     roomId: roomId,
     newStatus: parseInt(status)

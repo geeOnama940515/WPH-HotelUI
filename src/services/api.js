@@ -189,15 +189,16 @@ export const api = {
   }),
 
   /**
-   * POST request for file uploads
+   * File upload request (supports POST, PUT, etc.)
    * @param {string} endpoint - API endpoint
    * @param {FormData} formData - Form data with files
+   * @param {string} method - HTTP method (default: 'POST')
    * @returns {Promise<Object>} Response data
    */
-  postFile: async (endpoint, formData) => {
+  uploadFile: async (endpoint, formData, method = 'POST') => {
     const token = localStorage.getItem('token');
     
-    console.log('🚀 Starting file upload to:', `${API_URL}${endpoint}`);
+    console.log(`🚀 Starting ${method} file upload to:`, `${API_URL}${endpoint}`);
     console.log('📁 FormData contents:');
     for (let [key, value] of formData.entries()) {
       if (value instanceof File) {
@@ -209,7 +210,7 @@ export const api = {
     
     try {
       const response = await fetch(`${API_URL}${endpoint}`, {
-        method: 'POST',
+        method: method,
         headers: {
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
           // Don't set Content-Type for FormData, let browser set it with boundary
@@ -232,7 +233,7 @@ export const api = {
           
           // Retry the request with new token
           const retryResponse = await fetch(`${API_URL}${endpoint}`, {
-            method: 'POST',
+            method: method,
             headers: {
               'Authorization': `Bearer ${newToken}`
             },
@@ -363,5 +364,15 @@ export const api = {
     } catch (error) {
       throw error;
     }
+  },
+
+  /**
+   * POST request for file uploads (backward compatibility)
+   * @param {string} endpoint - API endpoint
+   * @param {FormData} formData - Form data with files
+   * @returns {Promise<Object>} Response data
+   */
+  postFile: async (endpoint, formData) => {
+    return api.uploadFile(endpoint, formData, 'POST');
   }
 };

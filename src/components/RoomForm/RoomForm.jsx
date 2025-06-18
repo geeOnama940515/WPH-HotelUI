@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { createRoom, updateRoom, uploadRoomImages } from '../../services/roomService';
+import { createRoom, updateRoom, updateRoomWithImages, uploadRoomImages } from '../../services/roomService';
 import { showToast } from '../../utils/notifications';
 import { ConfirmationModal } from '../Modal/Modal';
 
@@ -46,7 +46,15 @@ function RoomForm({ room, onSubmit, onCancel }) {
 
       // Set existing image previews if editing
       if (room.images && room.images.length > 0) {
-        setImagePreviews(room.images.map(img => img.url || img));
+        const existingImageUrls = room.images.map(img => {
+          // Construct URL from fileName (backend structure)
+          if (img.fileName) {
+            return `https://wph-backend.gregdoesdev.xyz/images/rooms/${img.fileName}`;
+          }
+          // Fallback to url or img if fileName doesn't exist
+          return img.url || img;
+        });
+        setImagePreviews(existingImageUrls);
       }
     }
   }, [room]);
@@ -71,13 +79,20 @@ function RoomForm({ room, onSubmit, onCancel }) {
       return true;
     });
 
-    // Limit to 6 images total
-    const limitedFiles = validFiles.slice(0, 6);
-    setImageFiles(limitedFiles);
+    // Limit to 6 images total (existing + new)
+    const totalImages = imagePreviews.length + validFiles.length;
+    if (totalImages > 6) {
+      showToast.error('Maximum 6 images allowed. Please remove some images first.');
+      return;
+    }
 
-    // Create preview URLs
-    const previewUrls = limitedFiles.map(file => URL.createObjectURL(file));
-    setImagePreviews(previewUrls);
+    // Append new files to existing ones
+    const newFiles = [...imageFiles, ...validFiles];
+    setImageFiles(newFiles);
+
+    // Create preview URLs for new files and append to existing previews
+    const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file));
+    setImagePreviews([...imagePreviews, ...newPreviewUrls]);
   };
 
   /**
@@ -88,8 +103,11 @@ function RoomForm({ room, onSubmit, onCancel }) {
     const newFiles = imageFiles.filter((_, i) => i !== index);
     const newPreviews = imagePreviews.filter((_, i) => i !== index);
     
-    // Revoke the URL to prevent memory leaks
-    URL.revokeObjectURL(imagePreviews[index]);
+    // Only revoke blob URLs (new uploads), not existing image URLs
+    const removedPreview = imagePreviews[index];
+    if (removedPreview && removedPreview.startsWith('blob:')) {
+      URL.revokeObjectURL(removedPreview);
+    }
     
     setImageFiles(newFiles);
     setImagePreviews(newPreviews);
@@ -129,18 +147,13 @@ function RoomForm({ room, onSubmit, onCancel }) {
       
       if (room) {
         // Update existing room
-        result = await updateRoom(room.id, saveModal.formData);
-        
-        // Upload images separately for existing room
         if (imageFiles.length > 0) {
-          try {
-            await uploadRoomImages(room.id, imageFiles);
-            showToast.success('Room and images updated successfully');
-          } catch (uploadError) {
-            console.error('Image upload failed:', uploadError);
-            showToast.error('Room updated but image upload failed. Please try uploading images again.');
-          }
+          // Use updateRoomWithImages if there are new images
+          result = await updateRoomWithImages(room.id, saveModal.formData);
+          showToast.success('Room and images updated successfully');
         } else {
+          // Use regular updateRoom if no new images
+          result = await updateRoom(room.id, saveModal.formData);
           showToast.success('Room updated successfully');
         }
       } else {
