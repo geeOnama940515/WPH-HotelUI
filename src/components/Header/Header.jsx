@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { showToast, toastMessages, confirmAction, confirmMessages } from '../../utils/notifications';
-import Modal from '../Modal/Modal';
+import { ConfirmationModal } from '../Modal/Modal';
 import './Header.css';
 
 /**
@@ -118,18 +118,16 @@ function Header() {
       </header>
 
       {/* Logout Confirmation Modal */}
-      <Modal
+      <ConfirmationModal
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
         title="Confirm Logout"
+        message="Are you sure you want to log out? You will need to sign in again to access admin features."
         confirmText="Logout"
         cancelText="Cancel"
-        onConfirm={handleLogout}
-      >
-        <p className="text-gray-600">
-          Are you sure you want to log out? You will need to sign in again to access admin features.
-        </p>
-      </Modal>
+        type="warning"
+      />
     </>
   );
 }
