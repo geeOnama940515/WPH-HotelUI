@@ -11,8 +11,9 @@ function ViewBookingSummary() {
 
   useEffect(() => {
     const token = searchParams.get('bookingtoken');
-    console.log('token', token);  
+    console.log('token-from-url', token);  
     if (!token) {
+      console.log('no token',token);
       setError('No booking token provided.');
       setLoading(false);
       return;
@@ -21,26 +22,27 @@ function ViewBookingSummary() {
   }, [searchParams]);
 
   const fetchBooking = async (token) => {
+    console.log('fetchBooking', token);
     setLoading(true);
     setError('');
     try {
       const booking = await getBookingByToken(token);
-      if (!booking || !booking.data) {
+      console.log('booking-data', booking);
+      if (!booking) {
         setError('Booking not found or invalid token.');
         setLoading(false);
         return;
       }
-      const b = booking.data;
       setBookingData({
-        guestFullName: b.guestName,
-        emailAddress: b.emailAddress,
-        phoneNumber: b.phone,
-        address: b.address,
-        numberOfGuests: b.guests,
-        specialRequests: b.specialRequests,
-        roomType: b.roomId,
-        checkIn: b.checkIn,
-        checkOut: b.checkOut,
+        guestFullName: booking.guestName,
+        emailAddress: booking.emailAddress,
+        phoneNumber: booking.phone,
+        address: booking.address,
+        numberOfGuests: booking.guests,
+        specialRequests: booking.specialRequests,
+        roomType: booking.roomId,
+        checkIn: booking.checkIn,
+        checkOut: booking.checkOut,
         // Add any other fields as needed
       });
     } catch (err) {
@@ -59,7 +61,7 @@ function ViewBookingSummary() {
         ) : error ? (
           <div className="bg-red-100 text-red-700 p-6 rounded-lg shadow text-center">{error}</div>
         ) : (
-          <BookingSummary bookingData={bookingData} onConfirm={null} onBack={null} />
+          <BookingSummary bookingData={bookingData} onConfirm={null} onBack={null} isViewOnly={true} />
         )}
       </div>
     </div>

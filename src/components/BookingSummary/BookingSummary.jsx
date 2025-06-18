@@ -9,8 +9,10 @@ import { getRooms } from '../../services/roomService';
  * @param {Object} bookingData - Booking form data
  * @param {Function} onConfirm - Callback when booking is confirmed
  * @param {Function} onBack - Callback to go back to form
+ * @param {boolean} isViewOnly - If true, shows contact info instead of action buttons
+ * @param {boolean} isConfirming - If true, shows loading state on confirm button
  */
-function BookingSummary({ bookingData, onConfirm, onBack }) {
+function BookingSummary({ bookingData, onConfirm, onBack, isViewOnly = false, isConfirming = false }) {
   const [rooms, setRooms] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -172,21 +174,54 @@ function BookingSummary({ bookingData, onConfirm, onBack }) {
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-4">
-          <button
-            onClick={onBack}
-            className="flex-1 bg-gray-200 text-gray-800 py-3 px-4 rounded-md hover:bg-gray-300 transition-colors font-semibold"
-          >
-            Back to Edit
-          </button>
-          <button
-            onClick={() => onConfirm({ ...bookingData, totalAmount: total })}
-            className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors font-semibold"
-          >
-            Confirm Booking
-          </button>
-        </div>
+        {/* Conditional Action Buttons or Contact Information */}
+        {isViewOnly ? (
+          <div className="border-t pt-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="text-lg font-medium mb-3 text-blue-800">Need Help?</h3>
+              <div className="space-y-2 text-sm text-blue-700">
+                <p>
+                  <span className="font-medium">To cancel your booking:</span> Please contact the hotel directly. 
+                  Cancellations must be made at least 24 hours before check-in.
+                </p>
+                <p>
+                  <span className="font-medium">Questions about your booking?</span> Our team is here to help!
+                </p>
+                <div className="mt-3">
+                  <a
+                    href="/contact"
+                    className="inline-flex items-center justify-center bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors font-semibold text-sm"
+                  >
+                    Contact Hotel
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
+            <button
+              onClick={onBack}
+              className="flex-1 bg-gray-200 text-gray-800 py-3 px-4 rounded-md hover:bg-gray-300 transition-colors font-semibold"
+            >
+              Back to Edit
+            </button>
+            <button
+              onClick={() => onConfirm({ ...bookingData, totalAmount: total })}
+              className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors font-semibold"
+              disabled={isConfirming}
+            >
+              {isConfirming ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Confirming...
+                </div>
+              ) : (
+                'Confirm Booking'
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

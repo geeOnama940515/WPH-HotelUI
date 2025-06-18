@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 // Import all components and pages
 import Header from './components/Header/Header';
@@ -42,6 +42,8 @@ function App() {
               <Route path="/auth" element={<Auth />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/my-bookings" element={<MyBookings />} />
+              {/* Catch-all route - redirect to home for any unmatched routes */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
           

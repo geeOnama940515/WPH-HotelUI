@@ -14,6 +14,7 @@ function Booking() {
   const [currentStep, setCurrentStep] = useState(1);
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [confirmingBooking, setConfirmingBooking] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -58,6 +59,7 @@ function Booking() {
   const handleConfirmBooking = async (finalBookingData) => {
     try {
       // Make API call to create the booking
+      setConfirmingBooking(true);
       const result = await createBooking(finalBookingData);
       console.log('Booking created successfully:', result);
       showToast.success('Booking confirmed successfully!');
@@ -65,6 +67,8 @@ function Booking() {
     } catch (error) {
       console.error('Booking failed:', error);
       showToast.error(error.message || 'Failed to create booking. Please try again.');
+    } finally {
+      setConfirmingBooking(false);
     }
   };
 
@@ -114,6 +118,7 @@ function Booking() {
             bookingData={bookingData}
             onConfirm={handleConfirmBooking}
             onBack={handleBackToForm}
+            isConfirming={confirmingBooking}
           />
         );
       case 3:
