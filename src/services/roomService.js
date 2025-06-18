@@ -117,9 +117,12 @@ export const uploadRoomImages = async (roomId, imageFiles) => {
  * Update room status (admin function)
  * 
  * @param {string} roomId - Room ID to update
- * @param {string} status - New room status (Available, Occupied, Maintenance)
+ * @param {string} status - New room status (Available=0, Booked=1, Occupied=2, Maintenance=3, Inactive=4)
  * @returns {Promise<Object>} Updated room object
  */
 export const updateRoomStatus = (roomId, status) => {
-  return api.put(`/api/room/${roomId}/status`, { status });
+  return api.put(`/api/room/${roomId}/status`, { 
+    roomId: roomId,
+    newStatus: parseInt(status)
+  });
 };

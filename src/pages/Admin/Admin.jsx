@@ -35,7 +35,11 @@ function Admin() {
     occupancyRate: 78,
     averageStayDuration: 2.4,
     totalRooms: rooms.length,
-    availableRooms: rooms.filter(room => room.status === 0).length // 0 = Available
+    availableRooms: rooms.filter(room => room.status === 0).length, // 0 = Available
+    bookedRooms: rooms.filter(room => room.status === 1).length,    // 1 = Booked
+    occupiedRooms: rooms.filter(room => room.status === 2).length,  // 2 = Occupied
+    maintenanceRooms: rooms.filter(room => room.status === 3).length, // 3 = Maintenance
+    inactiveRooms: rooms.filter(room => room.status === 4).length   // 4 = Inactive
   };
 
   const recentBookings = [
@@ -222,8 +226,10 @@ function Admin() {
   const getRoomStatusColor = (status) => {
     switch (status) {
       case 0: return 'bg-green-100 text-green-800'; // Available
-      case 1: return 'bg-red-100 text-red-800';     // Occupied
-      case 2: return 'bg-yellow-100 text-yellow-800'; // Maintenance
+      case 1: return 'bg-blue-100 text-blue-800';   // Booked
+      case 2: return 'bg-red-100 text-red-800';     // Occupied
+      case 3: return 'bg-yellow-100 text-yellow-800'; // Maintenance
+      case 4: return 'bg-gray-100 text-gray-800';   // Inactive
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -231,8 +237,10 @@ function Admin() {
   const getRoomStatusText = (status) => {
     switch (status) {
       case 0: return 'Available';
-      case 1: return 'Occupied';
-      case 2: return 'Maintenance';
+      case 1: return 'Booked';
+      case 2: return 'Occupied';
+      case 3: return 'Maintenance';
+      case 4: return 'Inactive';
       default: return 'Unknown';
     }
   };
@@ -340,13 +348,23 @@ function Admin() {
               </span>
             </div>
             
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                <span className="font-medium">Booked Rooms</span>
+              </div>
+              <span className="text-lg font-bold text-blue-600">
+                {rooms.filter(room => room.status === 1).length}
+              </span>
+            </div>
+            
             <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
               <div className="flex items-center space-x-3">
                 <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                 <span className="font-medium">Occupied Rooms</span>
               </div>
               <span className="text-lg font-bold text-red-600">
-                {rooms.filter(room => room.status === 1).length}
+                {rooms.filter(room => room.status === 2).length}
               </span>
             </div>
             
@@ -356,7 +374,17 @@ function Admin() {
                 <span className="font-medium">Maintenance</span>
               </div>
               <span className="text-lg font-bold text-yellow-600">
-                {rooms.filter(room => room.status === 2).length}
+                {rooms.filter(room => room.status === 3).length}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                <span className="font-medium">Inactive</span>
+              </div>
+              <span className="text-lg font-bold text-gray-600">
+                {rooms.filter(room => room.status === 4).length}
               </span>
             </div>
           </div>
@@ -564,8 +592,10 @@ function Admin() {
                             value={room.status || 0}
                           >
                             <option value="0">Available</option>
-                            <option value="1">Occupied</option>
-                            <option value="2">Maintenance</option>
+                            <option value="1">Booked</option>
+                            <option value="2">Occupied</option>
+                            <option value="3">Maintenance</option>
+                            <option value="4">Inactive</option>
                           </select>
                         </td>
                         <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
