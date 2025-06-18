@@ -19,19 +19,27 @@ function Rooms() {
     loadRooms();
   }, []);
 
-  const loadRooms = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const roomsData = await getRooms();
+const loadRooms = async () => {
+  setLoading(true);
+  setError('');
+  try {
+    const roomsData = await getRooms();
+    console.log('Rooms data received:', roomsData);
+
+    if (Array.isArray(roomsData)) {
       setRooms(roomsData);
-    } catch (error) {
-      console.error('Failed to load rooms:', error);
-      setError('Failed to load rooms. Please try again.');
-    } finally {
-      setLoading(false);
+    } else {
+      console.error('Unexpected data format:', roomsData);
+      setError('Unexpected data format received from the server.');
     }
-  };
+  } catch (error) {
+    console.error('Failed to load rooms:', error);
+    setError('Failed to load rooms. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleFilterChange = (filterType, value) => {
     setFilters(prev => ({
@@ -41,6 +49,12 @@ function Rooms() {
   };
 
   const filteredRooms = useMemo(() => {
+    // Ensure rooms is an array before processing
+    if (!Array.isArray(rooms)) {
+      console.warn('Rooms is not an array:', rooms);
+      return [];
+    }
+
     let result = [...rooms];
 
     // Apply price filter
@@ -68,16 +82,16 @@ function Rooms() {
     // Apply sorting
     switch (filters.sort) {
       case 'price-asc':
-        result.sort((a, b) => a.price - b.price);
+        result.sort((a, b) => (a.price || 0) - (b.price || 0));
         break;
       case 'price-desc':
-        result.sort((a, b) => b.price - a.price);
+        result.sort((a, b) => (b.price || 0) - (a.price || 0));
         break;
       case 'capacity-asc':
-        result.sort((a, b) => a.capacity - b.capacity);
+        result.sort((a, b) => (a.capacity || 0) - (b.capacity || 0));
         break;
       case 'capacity-desc':
-        result.sort((a, b) => b.capacity - a.capacity);
+        result.sort((a, b) => (b.capacity || 0) - (a.capacity || 0));
         break;
       default:
         break;

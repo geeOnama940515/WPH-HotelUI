@@ -10,11 +10,18 @@ import { api } from './api';
  * 
  * @returns {Promise<Array>} Array of room objects
  */
+
 export const getRooms = async () => {
   const response = await api.get('/api/room');
-  // The actual array of rooms is at response.data.data
-  return response.data.data;
+
+  // response is already unwrapped, so this is the room list
+  console.log('response (unwrapped):', response);
+  const rooms = response.data; // because `data` is the array of rooms
+
+  return rooms;
 };
+
+
 
 /**
  * Get a specific room by ID
