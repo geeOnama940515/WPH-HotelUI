@@ -1,8 +1,8 @@
-import React from 'react';
-import { FaEye } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { FaEye, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 /**
- * BookingsTable component for managing bookings with search and filters
+ * BookingsTable component for managing bookings with search, filters, and pagination
  */
 function BookingsTable({ 
   bookings, 
@@ -12,14 +12,78 @@ function BookingsTable({
   setSearchTerm, 
   dateFilter, 
   setDateFilter, 
+  statusFilter,
+  setStatusFilter,
   getFilteredBookings, 
   getStatusColor, 
   getBookingStatusText, 
   handleViewBooking, 
   handleStatusChange,
+  handleDateChange,
   bookingModal,
-  setBookingModal 
+  setBookingModal,
+  currentPage,
+  setCurrentPage,
+  itemsPerPage,
+  totalPages
 }) {
+  const statusOptions = [
+    { value: '', label: 'All Statuses' },
+    { value: '0', label: 'Pending' },
+    { value: '1', label: 'Confirmed' },
+    { value: '2', label: 'Cancelled' },
+    { value: '3', label: 'Checked In' },
+    { value: '4', label: 'Checked Out' },
+    { value: '5', label: 'Completed' }
+  ];
+
+  const [dateEditState, setDateEditState] = useState({
+    checkIn: '',
+    checkOut: ''
+  });
+
+  const getPaginatedBookings = () => {
+    const filtered = getFilteredBookings();
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filtered.slice(startIndex, endIndex);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setDateFilter({ startDate: '', endDate: '' });
+    setStatusFilter('');
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = searchTerm || dateFilter.startDate || dateFilter.endDate || statusFilter;
+
+  const handleEditDates = () => {
+    if (bookingModal.booking) {
+      setDateEditState({
+        checkIn: bookingModal.booking.checkIn.split('T')[0], // Extract date part only
+        checkOut: bookingModal.booking.checkOut.split('T')[0]
+      });
+      setBookingModal(prev => ({ ...prev, isEditingDates: true }));
+    }
+  };
+
+  const handleSaveDates = () => {
+    if (bookingModal.booking) {
+      const checkInISO = new Date(dateEditState.checkIn).toISOString();
+      const checkOutISO = new Date(dateEditState.checkOut).toISOString();
+      handleDateChange(bookingModal.booking.id, checkInISO, checkOutISO);
+    }
+  };
+
+  const handleCancelDateEdit = () => {
+    setBookingModal(prev => ({ ...prev, isEditingDates: false }));
+  };
+
   return (
     <div>
       <div className="mb-4">
@@ -32,7 +96,7 @@ function BookingsTable({
 
       {/* Search and Filter Controls */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Search */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -45,6 +109,24 @@ function BookingsTable({
               placeholder="Search by guest name or room..."
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
+          </div>
+          
+          {/* Status Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Status
+            </label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              {statusOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
           
           {/* Start Date Filter */}
@@ -75,13 +157,10 @@ function BookingsTable({
         </div>
         
         {/* Clear Filters Button */}
-        {(searchTerm || dateFilter.startDate || dateFilter.endDate) && (
+        {hasActiveFilters && (
           <div className="mt-4">
             <button
-              onClick={() => {
-                setSearchTerm('');
-                setDateFilter({ startDate: '', endDate: '' });
-              }}
+              onClick={clearAllFilters}
               className="text-sm text-blue-600 hover:text-blue-800"
             >
               Clear all filters
@@ -111,7 +190,7 @@ function BookingsTable({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {getFilteredBookings().map((booking) => (
+                {getPaginatedBookings().map((booking) => (
                   <tr key={booking.id}>
                     <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">{booking.guestName}</td>
                     <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">{booking.roomName}</td>
@@ -145,6 +224,79 @@ function BookingsTable({
           {getFilteredBookings().length === 0 && !loading && (
             <div className="p-8 text-center text-gray-500">
               No bookings found.
+            </div>
+          )}
+
+          {/* Pagination */}
+          {getFilteredBookings().length > 0 && (
+            <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 flex justify-between sm:hidden">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Showing{' '}
+                      <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span>
+                      {' '}to{' '}
+                      <span className="font-medium">
+                        {Math.min(currentPage * itemsPerPage, getFilteredBookings().length)}
+                      </span>
+                      {' '}of{' '}
+                      <span className="font-medium">{getFilteredBookings().length}</span>
+                      {' '}results
+                    </p>
+                  </div>
+                  <div>
+                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <FaChevronLeft className="h-4 w-4" />
+                      </button>
+                      
+                      {/* Page Numbers */}
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                            currentPage === page
+                              ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <FaChevronRight className="h-4 w-4" />
+                      </button>
+                    </nav>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -198,10 +350,30 @@ function BookingsTable({
                       <span className="font-medium">Guests:</span> {bookingModal.booking.guests}
                     </div>
                     <div>
-                      <span className="font-medium">Check-in:</span> {new Date(bookingModal.booking.checkIn).toLocaleDateString()}
+                      <span className="font-medium">Check-in:</span>
+                      {bookingModal.isEditingDates ? (
+                        <input
+                          type="date"
+                          value={dateEditState.checkIn}
+                          onChange={(e) => setDateEditState(prev => ({ ...prev, checkIn: e.target.value }))}
+                          className="ml-2 px-2 py-1 border border-gray-300 rounded text-sm"
+                        />
+                      ) : (
+                        <span className="ml-2">{new Date(bookingModal.booking.checkIn).toLocaleDateString()}</span>
+                      )}
                     </div>
                     <div>
-                      <span className="font-medium">Check-out:</span> {new Date(bookingModal.booking.checkOut).toLocaleDateString()}
+                      <span className="font-medium">Check-out:</span>
+                      {bookingModal.isEditingDates ? (
+                        <input
+                          type="date"
+                          value={dateEditState.checkOut}
+                          onChange={(e) => setDateEditState(prev => ({ ...prev, checkOut: e.target.value }))}
+                          className="ml-2 px-2 py-1 border border-gray-300 rounded text-sm"
+                        />
+                      ) : (
+                        <span className="ml-2">{new Date(bookingModal.booking.checkOut).toLocaleDateString()}</span>
+                      )}
                     </div>
                     <div>
                       <span className="font-medium">Total Amount:</span> ₱{bookingModal.booking.totalAmount.toLocaleString()}
@@ -212,6 +384,33 @@ function BookingsTable({
                         {getBookingStatusText(bookingModal.booking.status)}
                       </span>
                     </div>
+                  </div>
+                  
+                  {/* Date Edit Controls */}
+                  <div className="mt-3">
+                    {bookingModal.isEditingDates ? (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSaveDates}
+                          className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                        >
+                          Save Dates
+                        </button>
+                        <button
+                          onClick={handleCancelDateEdit}
+                          className="px-3 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleEditDates}
+                        className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                      >
+                        Edit Dates
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -236,6 +435,9 @@ function BookingsTable({
                     <option value="0">Pending</option>
                     <option value="1">Confirmed</option>
                     <option value="2">Cancelled</option>
+                    <option value="3">Checked In</option>
+                    <option value="4">Checked Out</option>
+                    <option value="5">Completed</option>
                   </select>
                 </div>
               </div>

@@ -50,11 +50,18 @@ export const getUserBookings = () => api.get('/bookings/user');
  * Update booking status (admin function)
  * 
  * @param {string} bookingId - Booking ID to update
- * @param {string} status - New booking status (pending, confirmed, cancelled, etc.)
+ * @param {string|number} status - New booking status (0-5 or enum string)
  * @returns {Promise<Object>} Updated booking object
  */
-export const updateBookingStatus = (bookingId, status) => 
-  api.put(`/bookings/${bookingId}/status`, { status });
+export const updateBookingStatus = (bookingId, status) => {
+  // Convert to integer if it's a string
+  const newStatus = parseInt(status);
+  
+  return api.put(`/api/booking/${bookingId}/status`, { 
+    bookingId: bookingId,
+    newStatus: newStatus
+  });
+};
 
 /**
  * Get all bookings (admin function)
@@ -101,3 +108,17 @@ const fetchBooking = async (token) => {
     setLoading(false);
   }
 };
+
+/**
+ * Update booking dates (admin function)
+ * 
+ * @param {string} bookingId - Booking ID to update
+ * @param {string} checkIn - New check-in date (ISO string)
+ * @param {string} checkOut - New check-out date (ISO string)
+ * @returns {Promise<Object>} Updated booking object
+ */
+export const updateBookingDates = (bookingId, checkIn, checkOut) => 
+  api.put(`/api/booking/${bookingId}/dates`, { 
+    checkIn: checkIn,
+    checkOut: checkOut
+  });

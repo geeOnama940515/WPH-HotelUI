@@ -19,6 +19,7 @@ The WPH Hotel Booking System is a full-featured web application designed for hot
   - Interactive room details with auto-changing image slideshow
   - Enhanced booking flow with room selection interface
   - Multi-step booking process with comprehensive validation
+  - **Public booking summary page** - View booking details via email links
   - Responsive design optimized for all devices
   - Contact form with inquiry management
 
@@ -30,8 +31,14 @@ The WPH Hotel Booking System is a full-featured web application designed for hot
     - Room status overview
     - Recent bookings summary
     - Growth rate indicators
+  - **Advanced Booking Management:**
+    - **Enhanced booking status system** with 6 status types (Pending, Confirmed, Cancelled, Checked In, Checked Out, Completed)
+    - **Pagination** - Manage large numbers of bookings efficiently (10 per page)
+    - **Status filtering** - Filter bookings by status for focused management
+    - **Search and date filtering** - Find specific bookings quickly
+    - **Real-time status updates** with API integration
+    - **Booking details modal** with comprehensive guest information
   - Advanced room management (add, edit, delete rooms)
-  - Booking status management with real-time updates
   - Visual analytics with progress bars and status indicators
   - Multi-tab interface for organized administration
 
@@ -41,6 +48,8 @@ The WPH Hotel Booking System is a full-featured web application designed for hot
   - Intuitive booking flow with room selection cards
   - Professional hotel branding with custom logo
   - Enhanced navigation with distinct "Book Now" button
+  - **Loading states** and user feedback throughout the application
+  - **Route protection** - Automatic redirects for invalid URLs
 
 ## Tools and Frameworks Used
 
@@ -51,6 +60,7 @@ The WPH Hotel Booking System is a full-featured web application designed for hot
 - **Tailwind CSS 3.3.3** - Utility-first CSS framework for styling
 - **React Icons 4.10.1** - Comprehensive icon library for React
 - **React DatePicker 4.16.0** - Date selection component for booking forms
+- **React Hot Toast** - Toast notifications for user feedback
 
 ### Development Tools
 - **ESLint** - Code linting and quality assurance
@@ -62,6 +72,7 @@ The WPH Hotel Booking System is a full-featured web application designed for hot
 - **JWT Authentication** - Secure token-based authentication
 - **Row Level Security (RLS)** - Database-level security policies
 - **Real-time subscriptions** - Live data updates
+- **RESTful API** - Full CRUD operations for bookings, rooms, and users
 
 ### Deployment & Containerization
 - **Docker** - Containerization for consistent deployment
@@ -73,18 +84,24 @@ The WPH Hotel Booking System is a full-featured web application designed for hot
 ```
 src/
 ├── components/          # Reusable UI components
+│   ├── Admin/           # Admin-specific components
+│   │   ├── BookingsTable.jsx  # Enhanced booking table with pagination
+│   │   ├── Dashboard.jsx      # Analytics dashboard
+│   │   └── RoomsTable.jsx     # Room management table
 │   ├── BookingForm/     # Booking form with validation
-│   ├── BookingSummary/  # Booking review and confirmation
+│   ├── BookingSummary/  # Booking review and confirmation (supports view-only mode)
 │   ├── Header/          # Navigation header with enhanced Book Now button
 │   ├── Footer/          # Site footer
 │   ├── RoomCard/        # Room display cards
 │   ├── RoomFilter/      # Room filtering controls
-│   └── RoomForm/        # Admin room management form
+│   ├── RoomForm/        # Admin room management form
+│   └── Modal/           # Reusable modal components
 ├── pages/               # Main application pages
 │   ├── Home/            # Landing page with hero section
 │   ├── Rooms/           # Room browsing and filtering
 │   ├── RoomDetails/     # Detailed room information with image gallery
 │   ├── Booking/         # Enhanced multi-step booking process
+│   │   └── ViewBookingSummary.jsx  # Public booking summary page
 │   ├── Auth/            # Admin authentication
 │   ├── Admin/           # Admin dashboard with analytics
 │   ├── MyBookings/      # User booking management
@@ -94,11 +111,13 @@ src/
 ├── services/            # API service layers
 │   ├── api.js           # Base API configuration
 │   ├── authService.js   # Authentication services
-│   ├── bookingService.js # Booking management
+│   ├── bookingService.js # Enhanced booking management with status updates
 │   ├── roomService.js   # Room management
 │   └── userService.js   # User profile management
 ├── data/                # Static data and mock data
 │   └── roomsData.js     # Room information
+├── utils/               # Utility functions
+│   └── notifications.js # Toast notification system
 └── index.css            # Global styles and Tailwind imports
 ```
 
@@ -172,11 +191,49 @@ To access the admin dashboard:
    - **Email:** admin@wphhotel.com
    - **Password:** Admin123!
 
-### Admin Dashboard Features
+## New Features & Enhancements
+
+### 🆕 Public Booking Summary Page
+- **URL**: `/view-booking-summary?bookingtoken={token}`
+- **Purpose**: Allows guests to view their booking details via email links
+- **Features**:
+  - No authentication required
+  - Displays complete booking information
+  - Contact information for support
+  - Responsive design for all devices
+
+### 🆕 Enhanced Booking Status Management
+- **6 Status Types**: Pending, Confirmed, Cancelled, Checked In, Checked Out, Completed
+- **Real-time Updates**: Status changes are immediately reflected in the UI
+- **API Integration**: Full backend integration with proper error handling
+- **Visual Indicators**: Color-coded status badges for easy identification
+
+### 🆕 Admin Booking Management Improvements
+- **Pagination**: 10 bookings per page for better performance
+- **Status Filtering**: Filter bookings by any status
+- **Advanced Search**: Search by guest name or room name
+- **Date Range Filtering**: Filter by check-in/check-out dates
+- **Clear Filters**: One-click filter reset
+- **Results Counter**: Shows "X to Y of Z results"
+
+### 🆕 Enhanced User Experience
+- **Loading States**: Visual feedback during API calls
+- **Toast Notifications**: Success/error messages throughout the app
+- **Route Protection**: Automatic redirects for invalid URLs
+- **Booking Confirmation**: Loading state during booking submission
+- **Contact Integration**: Direct links to contact page from booking summary
+
+### 🆕 API Enhancements
+- **Booking Status Updates**: `PUT /api/booking/{id}/status`
+- **Public Booking View**: `GET /api/booking/view/{token}`
+- **Enhanced Error Handling**: Proper validation and user feedback
+- **Type Safety**: Integer-based status values for backend compatibility
+
+## Admin Dashboard Features
 
 The admin dashboard includes:
 
-#### Dashboard Overview
+### Dashboard Overview
 - **Revenue Analytics**: Total and monthly revenue tracking with growth indicators
 - **Booking Statistics**: Total bookings, monthly bookings, and trends
 - **Occupancy Metrics**: Real-time occupancy rate and average stay duration
@@ -184,153 +241,59 @@ The admin dashboard includes:
 - **Recent Bookings**: Quick access to latest booking information
 - **Monthly Trends**: Revenue and booking trends with visual progress bars
 
-#### Room Management
+### Enhanced Booking Management
+- **Comprehensive Booking Table**:
+  - Pagination (10 bookings per page)
+  - Status filtering dropdown
+  - Search functionality
+  - Date range filtering
+  - Clear filters option
+  - Results counter
+- **Booking Details Modal**:
+  - Complete guest information
+  - Booking details and costs
+  - Special requests display
+  - Status update dropdown
+  - Real-time status changes
+- **Status Management**:
+  - 6 different booking statuses
+  - Color-coded status indicators
+  - API-integrated status updates
+  - Success/error notifications
+
+### Room Management
 - Add, edit, and delete rooms
 - Update room status (available, occupied, maintenance)
 - Manage room pricing and capacity
 - Upload and manage room images
 
-#### Booking Management
-- View all bookings with filtering options
-- Update booking status (pending, confirmed, cancelled)
-- Monitor guest information and special requests
-- Track booking revenue and duration
+## API Endpoints
 
-### Supabase Integration
+### Booking Management
+- `GET /api/booking` - Get all bookings (admin)
+- `POST /api/booking` - Create new booking
+- `PUT /api/booking/{id}/status` - Update booking status
+- `GET /api/booking/view/{token}` - Get booking by public token
 
-This application is fully integrated with Supabase for:
+### Room Management
+- `GET /api/room` - Get all rooms
+- `POST /api/room` - Create new room
+- `PUT /api/room/{id}` - Update room
+- `DELETE /api/room/{id}` - Delete room
+- `PUT /api/room/{id}/status` - Update room status
 
-#### Database Schema
-- **Profiles**: User profile management with RLS
-- **Rooms**: Room inventory with status tracking
-- **Bookings**: Comprehensive booking management
-
-#### Authentication
-- Email/password authentication
-- JWT token management
-- Row Level Security (RLS) policies
-- Admin role management
-
-#### Real-time Features
-- Live booking updates
-- Real-time room availability
-- Instant status changes
-
-### API Integration
-
-The application includes a complete service layer ready for backend integration:
-
-#### Expected Backend Endpoints
-```
-Authentication:
-POST /api/auth/login
-POST /api/auth/register
-
-Rooms:
-GET /api/rooms
-POST /api/rooms (Admin)
-PUT /api/rooms/{id} (Admin)
-DELETE /api/rooms/{id} (Admin)
-
-Bookings:
-GET /api/bookings (User's bookings)
-GET /api/bookings/all (Admin - all bookings)
-POST /api/bookings
-PUT /api/bookings/{id}/status (Admin)
-
-User Profile:
-GET /api/profile
-PUT /api/profile
-```
-
-#### Database Models
-The `types.txt` file contains complete TypeScript interfaces and C# entity models ready for backend implementation, including:
-- **User/Profile entities** with authentication
-- **Room entities** with multiple image support and status management
-- **Booking entities** with full lifecycle management
-- **Authentication DTOs** for secure login/registration
-- **API response wrappers** for consistent data handling
-
-### Production Deployment
-
-For production deployment:
-
-1. **Build the application:**
-   ```bash
-   npm run build
-   ```
-
-2. **Deploy the `dist` folder** to your hosting provider (Netlify, Vercel, etc.)
-
-3. **Configure environment variables** on your hosting platform:
-   ```env
-   VITE_SUPABASE_URL=https://your-project.supabase.co
-   VITE_SUPABASE_ANON_KEY=your_anon_key
-   ```
-
-### Key Features Highlights
-
-#### Enhanced Booking Experience
-- **Room Selection Interface**: Visual room cards with pricing and capacity
-- **Multi-step Process**: Form → Summary → Confirmation
-- **Comprehensive Validation**: Guest capacity, date validation, required fields
-- **Cost Breakdown**: Detailed pricing with taxes and service charges
-
-#### Advanced Room Details
-- **Auto-changing Image Gallery**: 6-image slideshow with manual controls
-- **Full-screen Modal**: Expandable image viewer with keyboard navigation
-- **Comprehensive Information**: Amenities, features, and included services
-- **Similar Rooms**: Recommendations for alternative options
-
-#### Professional Admin Dashboard
-- **Key Performance Indicators**: Revenue, bookings, occupancy, growth
-- **Visual Analytics**: Progress bars, status indicators, trend charts
-- **Real-time Data**: Live booking status and room availability
-- **Comprehensive Management**: Rooms, bookings, and user management
-
-### Troubleshooting
-
-**Common Issues:**
-
-- **Port already in use:** Change the port in `vite.config.js` or kill the process using the port
-- **Dependencies not installing:** Delete `node_modules` and `package-lock.json`, then run `npm install` again
-- **Build errors:** Ensure all environment variables are properly set
-- **Supabase connection issues:** Verify your Supabase project URL and API keys
-- **Icon import errors:** Ensure all React Icons are properly imported and available
-
-**Development Tips:**
-
-- Use the browser's developer tools to inspect responsive design
-- Check the console for any JavaScript errors
-- The application includes comprehensive error handling and validation
-- All service functions are ready for immediate Supabase integration
-- Admin dashboard provides real-time insights into system performance
-
-### Contributing
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly across different devices
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-### Support
+## License
 
-For support or questions about the WPH Hotel Booking System, please refer to the documentation or contact the development team.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-**Live Demo:** [https://wph-hotel.gregdoesdev.xyz](https://wph-hotel.gregdoesdev.xyz)
+## Support
 
-### Recent Updates
-
-- ✅ **Enhanced Admin Dashboard** with comprehensive analytics and KPIs
-- ✅ **Improved Booking Flow** with visual room selection interface
-- ✅ **Advanced Room Gallery** with auto-changing slideshow and modal viewer
-- ✅ **Professional Navigation** with distinct Book Now button styling
-- ✅ **Supabase Integration** with complete database schema and RLS policies
-- ✅ **Mobile Optimization** with responsive design across all components
-- ✅ **Real-time Analytics** with revenue tracking and occupancy monitoring
-
----
-
-**Built with ❤️ using React, Vite, Tailwind CSS, and Supabase**
-**Production-ready with comprehensive admin dashboard and analytics**
+For support, email support@wphhotel.com or create an issue in the repository.

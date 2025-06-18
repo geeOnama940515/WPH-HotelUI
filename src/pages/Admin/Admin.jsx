@@ -6,7 +6,7 @@ import Dashboard from '../../components/Admin/Dashboard';
 import BookingsTable from '../../components/Admin/BookingsTable';
 import RoomsTable from '../../components/Admin/RoomsTable';
 import { getRooms, deleteRoom, updateRoomStatus } from '../../services/roomService';
-import { getAllBookings } from '../../services/bookingService';
+import { getAllBookings, updateBookingStatus, updateBookingDates } from '../../services/bookingService';
 import { ConfirmationModal } from '../../components/Modal/Modal';
 import { showToast } from '../../utils/notifications';
 
@@ -29,7 +29,8 @@ function Admin() {
   // Booking modal state
   const [bookingModal, setBookingModal] = useState({
     isOpen: false,
-    booking: null
+    booking: null,
+    isEditingDates: false
   });
   
   // Search and filter state
@@ -38,6 +39,9 @@ function Admin() {
     startDate: '',
     endDate: ''
   });
+  const [statusFilter, setStatusFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Number of bookings per page
   
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -149,7 +153,7 @@ function Admin() {
   };
 
   /**
-   * Filter bookings based on search term and date range
+   * Filter bookings based on search term, date range, and status
    */
   const getFilteredBookings = () => {
     return bookings.filter(booking => {
@@ -158,6 +162,11 @@ function Admin() {
                            booking.roomName.toLowerCase().includes(searchTerm.toLowerCase());
       
       if (!matchesSearch) return false;
+      
+      // Status filter
+      if (statusFilter !== '') {
+        if (booking.status !== parseInt(statusFilter)) return false;
+      }
       
       // Date filter
       if (dateFilter.startDate || dateFilter.endDate) {
@@ -179,8 +188,41 @@ function Admin() {
     });
   };
 
-  const handleStatusChange = (bookingId, newStatus) => {
-    console.log(`Updating booking ${bookingId} status to ${newStatus}`);
+  // Calculate total pages for pagination
+  const totalPages = Math.ceil(getFilteredBookings().length / itemsPerPage);
+
+  const handleStatusChange = async (bookingId, newStatus) => {
+    try {
+      await updateBookingStatus(bookingId, newStatus);
+      // Update local state
+      setBookings(bookings.map(booking => 
+        booking.id === bookingId ? { ...booking, status: parseInt(newStatus) } : booking
+      ));
+      showToast.success('Booking status updated successfully');
+    } catch (error) {
+      console.error('Failed to update booking status:', error);
+      showToast.error('Failed to update booking status. Please try again.');
+    }
+  };
+
+  const handleDateChange = async (bookingId, checkIn, checkOut) => {
+    try {
+      await updateBookingDates(bookingId, checkIn, checkOut);
+      // Update local state
+      setBookings(bookings.map(booking => 
+        booking.id === bookingId ? { ...booking, checkIn, checkOut } : booking
+      ));
+      // Update modal state
+      setBookingModal(prev => ({
+        ...prev,
+        booking: { ...prev.booking, checkIn, checkOut },
+        isEditingDates: false
+      }));
+      showToast.success('Booking dates updated successfully');
+    } catch (error) {
+      console.error('Failed to update booking dates:', error);
+      showToast.error('Failed to update booking dates. Please try again.');
+    }
   };
 
   const handleRoomStatusChange = async (roomId, newStatus) => {
@@ -237,12 +279,18 @@ function Admin() {
     const statusValue = typeof status === 'string' ? status : status.toString();
     
     switch (statusValue) {
-      case 'confirmed':
+      case 'Confirmed':
       case '1': return 'bg-green-100 text-green-800';
-      case 'pending':
+      case 'Pending':
       case '0': return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled':
+      case 'Cancelled':
       case '2': return 'bg-red-100 text-red-800';
+      case 'CheckedIn':
+      case '3': return 'bg-blue-100 text-blue-800';
+      case 'CheckedOut':
+      case '4': return 'bg-purple-100 text-purple-800';
+      case 'Completed':
+      case '5': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -253,6 +301,9 @@ function Admin() {
       case 0: return 'Pending';
       case 1: return 'Confirmed';
       case 2: return 'Cancelled';
+      case 3: return 'CheckedIn';
+      case 4: return 'CheckedOut';
+      case 5: return 'Completed';
       default: return 'Unknown';
     }
   };
@@ -346,13 +397,20 @@ function Admin() {
           setSearchTerm={setSearchTerm}
           dateFilter={dateFilter}
           setDateFilter={setDateFilter}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
           getFilteredBookings={getFilteredBookings}
           getStatusColor={getStatusColor}
           getBookingStatusText={getBookingStatusText}
           handleViewBooking={handleViewBooking}
           handleStatusChange={handleStatusChange}
+          handleDateChange={handleDateChange}
           bookingModal={bookingModal}
           setBookingModal={setBookingModal}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+          totalPages={totalPages}
         />
       )}
 
@@ -395,109 +453,6 @@ function Admin() {
         cancelText="Cancel"
         type="danger"
       />
-
-      {/* Booking Details Modal */}
-      {bookingModal.isOpen && bookingModal.booking && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Booking Details</h3>
-                <button
-                  onClick={() => setBookingModal({ isOpen: false, booking: null })}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                {/* Guest Information */}
-                <div className="border-b pb-4">
-                  <h4 className="font-medium text-gray-900 mb-2">Guest Information</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Name:</span> {bookingModal.booking.guestName}
-                    </div>
-                    <div>
-                      <span className="font-medium">Email:</span> {bookingModal.booking.emailAddress}
-                    </div>
-                    <div>
-                      <span className="font-medium">Phone:</span> {bookingModal.booking.phone}
-                    </div>
-                    <div>
-                      <span className="font-medium">Address:</span> {bookingModal.booking.address || 'Not provided'}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Booking Details */}
-                <div className="border-b pb-4">
-                  <h4 className="font-medium text-gray-900 mb-2">Booking Details</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Room:</span> {bookingModal.booking.roomName}
-                    </div>
-                    <div>
-                      <span className="font-medium">Guests:</span> {bookingModal.booking.guests}
-                    </div>
-                    <div>
-                      <span className="font-medium">Check-in:</span> {new Date(bookingModal.booking.checkIn).toLocaleDateString()}
-                    </div>
-                    <div>
-                      <span className="font-medium">Check-out:</span> {new Date(bookingModal.booking.checkOut).toLocaleDateString()}
-                    </div>
-                    <div>
-                      <span className="font-medium">Total Amount:</span> ₱{bookingModal.booking.totalAmount.toLocaleString()}
-                    </div>
-                    <div>
-                      <span className="font-medium">Status:</span> 
-                      <span className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(bookingModal.booking.status)}`}>
-                        {getBookingStatusText(bookingModal.booking.status)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Special Requests */}
-                {bookingModal.booking.specialRequests && (
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Special Requests</h4>
-                    <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-md">
-                      {bookingModal.booking.specialRequests}
-                    </p>
-                  </div>
-                )}
-
-                {/* Status Update */}
-                <div className="border-t pt-4">
-                  <h4 className="font-medium text-gray-900 mb-2">Update Status</h4>
-                  <select
-                    onChange={(e) => handleStatusChange(bookingModal.booking.id, e.target.value)}
-                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    defaultValue={bookingModal.booking.status}
-                  >
-                    <option value="0">Pending</option>
-                    <option value="1">Confirmed</option>
-                    <option value="2">Cancelled</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex justify-end mt-6">
-                <button
-                  onClick={() => setBookingModal({ isOpen: false, booking: null })}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
