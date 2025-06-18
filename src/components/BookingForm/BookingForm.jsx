@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { getRooms } from '../../services/roomService';
+import { showToast, toastMessages } from '../../utils/notifications';
 
 /**
  * BookingForm component handles guest information and booking details
@@ -23,7 +24,6 @@ function BookingForm({ selectedRoom, onSubmit }) {
     numberOfGuests: 1
   });
   
-  const [errors, setErrors] = useState({}); // Form validation errors
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -49,6 +49,7 @@ function BookingForm({ selectedRoom, onSubmit }) {
       setRooms(roomsData);
     } catch (error) {
       console.error('Failed to load rooms:', error);
+      showToast.error('Failed to load room options. Please refresh the page.');
     } finally {
       setLoading(false);
     }
@@ -59,29 +60,55 @@ function BookingForm({ selectedRoom, onSubmit }) {
    * @returns {boolean} True if form is valid, false otherwise
    */
   const validateForm = () => {
-    const newErrors = {};
     const selectedRoomData = rooms.find(room => room.id === formData.roomType);
     
     // Guest information validation
-    if (!formData.guestFullName.trim()) newErrors.guestFullName = 'Guest full name is required';
-    if (!formData.emailAddress.trim()) newErrors.emailAddress = 'Email address is required';
-    if (!/\S+@\S+\.\S+/.test(formData.emailAddress)) newErrors.emailAddress = 'Please enter a valid email address';
-    if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required';
-    
-    // Booking details validation
-    if (!formData.roomType) newErrors.roomType = 'Please select a room type';
-    if (!formData.checkIn) newErrors.checkIn = 'Check-in date is required';
-    if (!formData.checkOut) newErrors.checkOut = 'Check-out date is required';
-    if (formData.checkOut <= formData.checkIn) newErrors.checkOut = 'Check-out date must be after check-in date';
-    
-    // Guest capacity validation
-    if (!formData.numberOfGuests || formData.numberOfGuests < 1) newErrors.numberOfGuests = 'At least 1 guest is required';
-    if (selectedRoomData && formData.numberOfGuests > selectedRoomData.capacity) {
-      newErrors.numberOfGuests = `This room can accommodate maximum ${selectedRoomData.capacity} guests`;
+    if (!formData.guestFullName.trim()) {
+      showToast.error('Guest full name is required');
+      return false;
+    }
+    if (!formData.emailAddress.trim()) {
+      showToast.error('Email address is required');
+      return false;
+    }
+    if (!/\S+@\S+\.\S+/.test(formData.emailAddress)) {
+      showToast.error('Please enter a valid email address');
+      return false;
+    }
+    if (!formData.phoneNumber.trim()) {
+      showToast.error('Phone number is required');
+      return false;
     }
     
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    // Booking details validation
+    if (!formData.roomType) {
+      showToast.error('Please select a room type');
+      return false;
+    }
+    if (!formData.checkIn) {
+      showToast.error('Check-in date is required');
+      return false;
+    }
+    if (!formData.checkOut) {
+      showToast.error('Check-out date is required');
+      return false;
+    }
+    if (formData.checkOut <= formData.checkIn) {
+      showToast.error('Check-out date must be after check-in date');
+      return false;
+    }
+    
+    // Guest capacity validation
+    if (!formData.numberOfGuests || formData.numberOfGuests < 1) {
+      showToast.error('At least 1 guest is required');
+      return false;
+    }
+    if (selectedRoomData && formData.numberOfGuests > selectedRoomData.capacity) {
+      showToast.error(`This room can accommodate maximum ${selectedRoomData.capacity} guests`);
+      return false;
+    }
+    
+    return true;
   };
 
   /**
@@ -158,7 +185,6 @@ function BookingForm({ selectedRoom, onSubmit }) {
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 placeholder="Enter full name"
               />
-              {errors.guestFullName && <p className="text-red-500 text-sm mt-1">{errors.guestFullName}</p>}
             </div>
             
             {/* Email address */}
@@ -173,7 +199,6 @@ function BookingForm({ selectedRoom, onSubmit }) {
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 placeholder="Enter email address"
               />
-              {errors.emailAddress && <p className="text-red-500 text-sm mt-1">{errors.emailAddress}</p>}
             </div>
           </div>
 
@@ -189,7 +214,6 @@ function BookingForm({ selectedRoom, onSubmit }) {
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               placeholder="Enter phone number"
             />
-            {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>}
           </div>
         </div>
 
@@ -216,7 +240,6 @@ function BookingForm({ selectedRoom, onSubmit }) {
                   </option>
                 ))}
               </select>
-              {errors.roomType && <p className="text-red-500 text-sm mt-1">{errors.roomType}</p>}
             </div>
 
             {/* Number of guests */}
@@ -236,7 +259,6 @@ function BookingForm({ selectedRoom, onSubmit }) {
                   </option>
                 ))}
               </select>
-              {errors.numberOfGuests && <p className="text-red-500 text-sm mt-1">{errors.numberOfGuests}</p>}
               {selectedRoomData && (
                 <p className="text-sm text-gray-500 mt-1">
                   This room can accommodate up to {selectedRoomData.capacity} guests
@@ -259,7 +281,6 @@ function BookingForm({ selectedRoom, onSubmit }) {
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 placeholderText="Select check-in date"
               />
-              {errors.checkIn && <p className="text-red-500 text-sm mt-1">{errors.checkIn}</p>}
             </div>
             
             {/* Check-out date */}
@@ -274,7 +295,6 @@ function BookingForm({ selectedRoom, onSubmit }) {
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 placeholderText="Select check-out date"
               />
-              {errors.checkOut && <p className="text-red-500 text-sm mt-1">{errors.checkOut}</p>}
             </div>
           </div>
         </div>

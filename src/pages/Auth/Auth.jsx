@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { register } from '../../services/authService';
+import { showToast, toastMessages } from '../../utils/notifications';
 
 function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -13,7 +14,6 @@ function Auth() {
     lastName: '',
     phoneNumber: ''
   });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
@@ -24,34 +24,32 @@ function Auth() {
       ...formData,
       [e.target.name]: e.target.value
     });
-    // Clear error when user starts typing
-    if (error) setError('');
   };
 
   const validateForm = () => {
     if (!formData.email || !formData.password) {
-      setError('Email and password are required');
+      showToast.error(toastMessages.formError);
       return false;
     }
 
     if (!isLogin) {
       if (!formData.firstName || !formData.lastName) {
-        setError('First name and last name are required');
+        showToast.error('First name and last name are required');
         return false;
       }
       
       if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match');
+        showToast.error('Passwords do not match');
         return false;
       }
 
       if (formData.password.length < 8) {
-        setError('Password must be at least 8 characters long');
+        showToast.error('Password must be at least 8 characters long');
         return false;
       }
 
       if (!formData.phoneNumber) {
-        setError('Phone number is required');
+        showToast.error('Phone number is required');
         return false;
       }
     }
@@ -64,13 +62,13 @@ function Auth() {
     
     if (!validateForm()) return;
     
-    setError('');
     setLoading(true);
     
     try {
       if (isLogin) {
         // Login
         await login(formData.email, formData.password);
+        showToast.success(toastMessages.loginSuccess);
         navigate('/admin');
       } else {
         // Register
@@ -84,6 +82,7 @@ function Auth() {
         };
         
         const user = await register(userData);
+        showToast.success(toastMessages.registerSuccess);
         
         // Auto-login after successful registration
         if (user.isAdmin) {
@@ -93,7 +92,7 @@ function Auth() {
         }
       }
     } catch (err) {
-      setError(err.message);
+      showToast.error(err.message || (isLogin ? toastMessages.loginError : toastMessages.registerError));
     } finally {
       setLoading(false);
     }
@@ -105,7 +104,6 @@ function Auth() {
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
-    setError('');
     setFormData({
       email: '',
       password: '',
@@ -134,12 +132,6 @@ function Auth() {
                 <p className="text-sm text-gray-600">Password: Admin123!</p>
               </div>
             </div>
-          </div>
-        )}
-        
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
           </div>
         )}
 
