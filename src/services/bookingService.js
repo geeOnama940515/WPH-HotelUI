@@ -62,3 +62,42 @@ export const updateBookingStatus = (bookingId, status) =>
  * @returns {Promise<Array>} Array of all bookings in the system
  */
 export const getAllBookings = () => api.get('/api/booking');
+
+/**
+ * Get a booking by its public token
+ * @param {string} token - The booking token
+ * @returns {Promise<Object>} Booking object
+ */
+export const getBookingByToken = (token) => api.get(`/api/booking/view/${token}`);
+
+const fetchBooking = async (token) => {
+
+  console.log('fetchBooking', token);
+  setLoading(true);
+  setError('');
+  try {
+    const booking = await getBookingByToken(token);
+    console.log('API booking response:', booking);
+    if (!booking || !booking.data) {
+      setError('Booking not found or invalid token.');
+      setLoading(false);
+      return;
+    }
+    const b = booking.data;
+    setBookingData({
+      guestFullName: b.guestName,
+      emailAddress: b.emailAddress,
+      phoneNumber: b.phone,
+      address: b.address,
+      numberOfGuests: b.guests,
+      specialRequests: b.specialRequests,
+      roomType: b.roomId,
+      checkIn: b.checkIn,
+      checkOut: b.checkOut,
+    });
+  } catch (err) {
+    setError('Booking not found or invalid token.');
+  } finally {
+    setLoading(false);
+  }
+};

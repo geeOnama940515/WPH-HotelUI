@@ -13,6 +13,7 @@ import Admin from './pages/Admin/Admin';
 import MyBookings from './pages/MyBookings/MyBookings';
 import Contact from './pages/Contact/Contact';
 import { AuthProvider } from './context/AuthContext';
+import ViewBookingSummary from './pages/Booking/ViewBookingSummary';
 
 /**
  * Main App component that sets up routing and global context
@@ -36,6 +37,7 @@ function App() {
               <Route path="/rooms" element={<Rooms />} />
               <Route path="/room-details/:id" element={<RoomDetails />} />
               <Route path="/booking" element={<Booking />} />
+              <Route path="/view-booking-summary" element={<ViewBookingSummary />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/admin" element={<Admin />} />
