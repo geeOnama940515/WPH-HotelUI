@@ -3,6 +3,8 @@ import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import BookingForm from '../../components/BookingForm/BookingForm';
 import BookingSummary from '../../components/BookingSummary/BookingSummary';
 import { getRooms } from '../../services/roomService';
+import { createBooking } from '../../services/bookingService';
+import { showToast } from '../../utils/notifications';
 
 function Booking() {
   const [searchParams] = useSearchParams();
@@ -55,11 +57,14 @@ function Booking() {
 
   const handleConfirmBooking = async (finalBookingData) => {
     try {
-      // Here you would make an API call to save the booking
-      console.log('Booking confirmed:', finalBookingData);
+      // Make API call to create the booking
+      const result = await createBooking(finalBookingData);
+      console.log('Booking created successfully:', result);
+      showToast.success('Booking confirmed successfully!');
       setCurrentStep(3);
     } catch (error) {
       console.error('Booking failed:', error);
+      showToast.error(error.message || 'Failed to create booking. Please try again.');
     }
   };
 

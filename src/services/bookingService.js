@@ -12,14 +12,32 @@ import { api } from './api';
  * @param {string} bookingData.guestFullName - Guest's full name
  * @param {string} bookingData.emailAddress - Guest's email
  * @param {string} bookingData.phoneNumber - Guest's phone number
+ * @param {string} bookingData.address - Guest's address (optional)
  * @param {string} bookingData.roomType - Selected room type ID
  * @param {Date} bookingData.checkIn - Check-in date
  * @param {Date} bookingData.checkOut - Check-out date
  * @param {number} bookingData.numberOfGuests - Number of guests
  * @param {number} bookingData.totalAmount - Total booking amount
+ * @param {string} bookingData.specialRequests - Special requests (optional)
  * @returns {Promise<Object>} Created booking object
  */
-export const createBooking = (bookingData) => api.post('/bookings', bookingData);
+export const createBooking = (bookingData) => {
+  // Transform the data to match backend API requirements
+  const apiData = {
+    roomId: bookingData.roomType,
+    checkIn: bookingData.checkIn.toISOString(),
+    checkOut: bookingData.checkOut.toISOString(),
+    guests: bookingData.numberOfGuests,
+    totalAmount: bookingData.totalAmount,
+    specialRequests: bookingData.specialRequests || '',
+    phone: bookingData.phoneNumber,
+    address: bookingData.address || '',
+    emailAddress: bookingData.emailAddress,
+    guestName: bookingData.guestFullName
+  };
+
+  return api.post('/api/booking', apiData);
+};
 
 /**
  * Get all bookings for the current user
@@ -43,4 +61,4 @@ export const updateBookingStatus = (bookingId, status) =>
  * 
  * @returns {Promise<Array>} Array of all bookings in the system
  */
-export const getAllBookings = () => api.get('/bookings');
+export const getAllBookings = () => api.get('/api/booking');

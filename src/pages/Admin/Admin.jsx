@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import RoomForm from '../../components/RoomForm/RoomForm';
 import { getRooms, deleteRoom, updateRoomStatus } from '../../services/roomService';
+import { getAllBookings } from '../../services/bookingService';
 import { runAllApiTests } from '../../services/apiTest';
 import { FaUsers, FaDollarSign, FaBed, FaCalendarCheck, FaArrowUp, FaChartLine, FaWifi, FaPlus, FaEdit, FaTrash, FaEye, FaTv, FaSnowflake, FaCoffee, FaBath } from 'react-icons/fa';
 import { ConfirmationModal } from '../../components/Modal/Modal';
@@ -13,6 +14,7 @@ function Admin() {
   const [showRoomForm, setShowRoomForm] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
   const [rooms, setRooms] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -81,31 +83,12 @@ function Admin() {
     { month: 'Jun', revenue: 510000, bookings: 34 }
   ];
 
-  const bookings = [
-    {
-      id: 1,
-      guestName: "John Doe",
-      roomName: "Deluxe King Room",
-      checkIn: "2025-02-15",
-      checkOut: "2025-02-18",
-      status: "confirmed",
-      totalAmount: 29850
-    },
-    {
-      id: 2,
-      guestName: "Jane Smith",
-      roomName: "Executive Suite",
-      checkIn: "2025-02-20",
-      checkOut: "2025-02-22",
-      status: "pending",
-      totalAmount: 29900
-    }
-  ];
-
   // Load rooms from API
   useEffect(() => {
     if (activeTab === 'rooms') {
       loadRooms();
+    } else if (activeTab === 'bookings') {
+      loadBookings();
     }
   }, [activeTab]);
 
@@ -128,6 +111,24 @@ function Admin() {
     } catch (error) {
       console.error('Failed to load rooms:', error);
       setError('Failed to load rooms. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Load bookings from API
+   */
+  const loadBookings = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await getAllBookings();
+      // The API response is already unwrapped, so we can access response.data directly
+      setBookings(response.data || []);
+    } catch (error) {
+      console.error('Failed to load bookings:', error);
+      setError('Failed to load bookings. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -215,11 +216,27 @@ function Admin() {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'confirmed': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
+    // Handle both string and numeric status values
+    const statusValue = typeof status === 'string' ? status : status.toString();
+    
+    switch (statusValue) {
+      case 'confirmed':
+      case '1': return 'bg-green-100 text-green-800';
+      case 'pending':
+      case '0': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled':
+      case '2': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getBookingStatusText = (status) => {
+    // Convert numeric status to text
+    switch (status) {
+      case 0: return 'Pending';
+      case 1: return 'Confirmed';
+      case 2: return 'Cancelled';
+      default: return 'Unknown';
     }
   };
 
@@ -493,49 +510,76 @@ function Admin() {
       {activeTab === 'dashboard' && renderDashboard()}
 
       {activeTab === 'bookings' && (
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guest</th>
-                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
-                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-in</th>
-                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-out</th>
-                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {bookings.map((booking) => (
-                  <tr key={booking.id}>
-                    <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">{booking.guestName}</td>
-                    <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">{booking.roomName}</td>
-                    <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">{booking.checkIn}</td>
-                    <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">{booking.checkOut}</td>
-                    <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">₱{booking.totalAmount.toLocaleString()}</td>
-                    <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(booking.status)}`}>
-                        {booking.status}
-                      </span>
-                    </td>
-                    <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
-                      <select
-                        onChange={(e) => handleStatusChange(booking.id, e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
-                        defaultValue={booking.status}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div>
+          <div className="mb-4">
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded text-sm mb-4">
+                {error}
+              </div>
+            )}
           </div>
+
+          {loading ? (
+            <div className="bg-white p-8 rounded-lg shadow-md text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p>Loading bookings...</p>
+            </div>
+          ) : (
+            <div className="bg-white shadow-md rounded-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guest</th>
+                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
+                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-in</th>
+                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-out</th>
+                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {bookings.map((booking) => (
+                      <tr key={booking.id}>
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">{booking.guestName}</td>
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">{booking.roomName}</td>
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">
+                          {new Date(booking.checkIn).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">
+                          {new Date(booking.checkOut).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">₱{booking.totalAmount.toLocaleString()}</td>
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(booking.status)}`}>
+                            {getBookingStatusText(booking.status)}
+                          </span>
+                        </td>
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                          <select
+                            onChange={(e) => handleStatusChange(booking.id, e.target.value)}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                            defaultValue={booking.status}
+                          >
+                            <option value="0">Pending</option>
+                            <option value="1">Confirmed</option>
+                            <option value="2">Cancelled</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {bookings.length === 0 && !loading && (
+                <div className="p-8 text-center text-gray-500">
+                  No bookings found.
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

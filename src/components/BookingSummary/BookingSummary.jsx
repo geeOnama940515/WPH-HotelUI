@@ -119,7 +119,13 @@ function BookingSummary({ bookingData, onConfirm, onBack }) {
             <p><span className="font-medium">Name:</span> {bookingData.guestFullName}</p>
             <p><span className="font-medium">Email:</span> {bookingData.emailAddress}</p>
             <p><span className="font-medium">Phone:</span> {bookingData.phoneNumber}</p>
+            {bookingData.address && (
+              <p><span className="font-medium">Address:</span> {bookingData.address}</p>
+            )}
             <p><span className="font-medium">Number of Guests:</span> {bookingData.numberOfGuests} guest{bookingData.numberOfGuests !== 1 ? 's' : ''}</p>
+            {bookingData.specialRequests && (
+              <p><span className="font-medium">Special Requests:</span> {bookingData.specialRequests}</p>
+            )}
           </div>
         </div>
 

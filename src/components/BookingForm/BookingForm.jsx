@@ -18,10 +18,12 @@ function BookingForm({ selectedRoom, onSubmit }) {
     guestFullName: '',
     emailAddress: '',
     phoneNumber: '',
+    address: '',
     roomType: '',
     checkIn: new Date(),
     checkOut: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
-    numberOfGuests: 1
+    numberOfGuests: 1,
+    specialRequests: ''
   });
   
   const [rooms, setRooms] = useState([]);
@@ -213,6 +215,34 @@ function BookingForm({ selectedRoom, onSubmit }) {
               onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               placeholder="Enter phone number"
+            />
+          </div>
+
+          {/* Address */}
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Address
+            </label>
+            <input
+              type="text"
+              value={formData.address}
+              onChange={(e) => handleInputChange('address', e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              placeholder="Enter your address (optional)"
+            />
+          </div>
+
+          {/* Special Requests */}
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Special Requests
+            </label>
+            <textarea
+              value={formData.specialRequests}
+              onChange={(e) => handleInputChange('specialRequests', e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              rows={3}
+              placeholder="Any special requests or additional information (optional)"
             />
           </div>
         </div>
