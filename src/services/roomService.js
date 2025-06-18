@@ -21,8 +21,6 @@ export const getRooms = async () => {
   return rooms;
 };
 
-
-
 /**
  * Get a specific room by ID
  * 
@@ -32,25 +30,33 @@ export const getRooms = async () => {
 export const getRoomById = (roomId) => api.get(`/api/room/${roomId}`);
 
 /**
- * Create a new room (admin function)
+ * Create a new room with images (admin function)
  * 
  * @param {Object} roomData - Room information
  * @param {string} roomData.name - Room name
  * @param {string} roomData.description - Room description
  * @param {number} roomData.price - Room price per night
  * @param {number} roomData.capacity - Maximum number of guests
+ * @param {Array<File>} roomData.images - Array of image files
  * @returns {Promise<Object>} Created room object
  */
-export const createRoom = (roomData) => {
-  const createRoomDto = {
-    name: roomData.name,
-    description: roomData.description || '',
-    price: roomData.price,
-    capacity: roomData.capacity,
-    images: [] // Images will be uploaded separately
-  };
+export const createRoom = async (roomData) => {
+  const formData = new FormData();
   
-  return api.post('/api/room', createRoomDto);
+  // Add room data
+  formData.append('name', roomData.name);
+  formData.append('description', roomData.description || '');
+  formData.append('price', roomData.price);
+  formData.append('capacity', roomData.capacity);
+  
+  // Add image files if any
+  if (roomData.images && roomData.images.length > 0) {
+    roomData.images.forEach((file) => {
+      formData.append('files', file);
+    });
+  }
+  
+  return api.postFile('/api/rooms/with-images', formData);
 };
 
 /**

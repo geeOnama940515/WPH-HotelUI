@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createRoom, updateRoom, uploadRoomImages } from '../../services/roomService';
+import { showToast } from '../../utils/notifications';
 
 /**
  * RoomForm component for adding/editing rooms (Admin only)
@@ -23,10 +24,8 @@ function RoomForm({ room, onSubmit, onCancel }) {
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
 
-  // Loading and error states
+  // Loading state
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadingImages, setUploadingImages] = useState(false);
-  const [error, setError] = useState('');
 
   // Populate form with existing room data when editing
   useEffect(() => {
@@ -55,11 +54,11 @@ function RoomForm({ room, onSubmit, onCancel }) {
     // Validate files
     const validFiles = files.filter(file => {
       if (!file.type.startsWith('image/')) {
-        alert('Please select only image files');
+        showToast.error('Please select only image files');
         return false;
       }
       if (file.size > 5 * 1024 * 1024) {
-        alert(`${file.name} is too large. Maximum size is 5MB`);
+        showToast.error(`${file.name} is too large. Maximum size is 5MB`);
         return false;
       }
       return true;
@@ -95,7 +94,6 @@ function RoomForm({ room, onSubmit, onCancel }) {
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setIsSubmitting(true);
     
     try {
@@ -104,7 +102,8 @@ function RoomForm({ room, onSubmit, onCancel }) {
         name: formData.name.trim(),
         description: formData.description.trim(),
         price: parseFloat(formData.price),
-        capacity: parseInt(formData.capacity)
+        capacity: parseInt(formData.capacity),
+        images: imageFiles // Include image files for new room creation
       };
 
       let result;
@@ -112,28 +111,23 @@ function RoomForm({ room, onSubmit, onCancel }) {
       if (room) {
         // Update existing room
         result = await updateRoom(room.id, roomData);
-      } else {
-        // Create new room
-        result = await createRoom(roomData);
-      }
-
-      // Upload images if any are selected
-      if (imageFiles.length > 0) {
-        setUploadingImages(true);
-        try {
-          await uploadRoomImages(result.id || room?.id, imageFiles);
-        } catch (uploadError) {
-          console.error('Image upload failed:', uploadError);
-          // Provide more specific error message
-          const errorMessage = uploadError.message || 'Unknown upload error';
-          if (errorMessage.includes('Unexpected end of JSON input')) {
-            alert('Room saved successfully, but there was an issue with the image upload response. The images may not have been uploaded properly. You can try uploading images again.');
-          } else {
-            alert(`Room saved successfully, but image upload failed: ${errorMessage}. You can try uploading images again.`);
+        
+        // Upload images separately for existing room
+        if (imageFiles.length > 0) {
+          try {
+            await uploadRoomImages(room.id, imageFiles);
+            showToast.success('Room and images updated successfully');
+          } catch (uploadError) {
+            console.error('Image upload failed:', uploadError);
+            showToast.error('Room updated but image upload failed. Please try uploading images again.');
           }
-        } finally {
-          setUploadingImages(false);
+        } else {
+          showToast.success('Room updated successfully');
         }
+      } else {
+        // Create new room with images
+        result = await createRoom(roomData);
+        showToast.success('Room created successfully');
       }
 
       // Clean up preview URLs
@@ -146,7 +140,7 @@ function RoomForm({ room, onSubmit, onCancel }) {
       onSubmit(result);
     } catch (error) {
       console.error('Room operation failed:', error);
-      setError(error.message || 'Failed to save room. Please try again.');
+      showToast.error(error.message || 'Failed to save room. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -154,13 +148,6 @@ function RoomForm({ room, onSubmit, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Error display */}
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
-      )}
-
       {/* Basic Room Information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Room name */}
@@ -201,20 +188,17 @@ function RoomForm({ room, onSubmit, onCancel }) {
       {/* Room description */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Description
+          Description *
         </label>
         <textarea
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          rows="3"
-          maxLength={1000}
           className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          placeholder="Describe the room features, amenities, and what makes it special..."
+          rows={4}
+          required
+          placeholder="Describe the room and its amenities..."
           disabled={isSubmitting}
         />
-        <p className="text-sm text-gray-500 mt-1">
-          {formData.description.length}/1000 characters
-        </p>
       </div>
 
       {/* Room price */}
@@ -227,96 +211,100 @@ function RoomForm({ room, onSubmit, onCancel }) {
           value={formData.price}
           onChange={(e) => setFormData({ ...formData, price: e.target.value })}
           className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          min="0.01"
+          min="0"
           step="0.01"
           required
-          placeholder="e.g., 9950.00"
+          placeholder="e.g., 1000.00"
           disabled={isSubmitting}
         />
       </div>
 
-      {/* Image Upload Section */}
+      {/* Image upload */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-4">
-          Room Images (Optional)
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Room Images {!room && '*'}
         </label>
-        
-        {/* File input */}
-        <div className="mb-4">
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleImageChange}
-            className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            disabled={isSubmitting}
-          />
-          <p className="text-sm text-gray-600 mt-2">
-            Select up to 6 images. Supported formats: JPG, PNG, WebP (max 5MB each)
-          </p>
+        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+          <div className="space-y-1 text-center">
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400"
+              stroke="currentColor"
+              fill="none"
+              viewBox="0 0 48 48"
+              aria-hidden="true"
+            >
+              <path
+                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <div className="flex text-sm text-gray-600">
+              <label
+                htmlFor="images"
+                className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+              >
+                <span>Upload images</span>
+                <input
+                  id="images"
+                  name="images"
+                  type="file"
+                  className="sr-only"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  disabled={isSubmitting}
+                />
+              </label>
+              <p className="pl-1">or drag and drop</p>
+            </div>
+            <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+          </div>
         </div>
 
         {/* Image previews */}
         {imagePreviews.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
             {imagePreviews.map((preview, index) => (
               <div key={index} className="relative">
                 <img
                   src={preview}
-                  alt={`Preview ${index + 1}`}
-                  className="w-full h-32 object-cover rounded-lg border"
+                  alt={`Room preview ${index + 1}`}
+                  className="h-24 w-full object-cover rounded-lg"
                 />
                 <button
                   type="button"
                   onClick={() => removeImage(index)}
-                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
+                  className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 focus:outline-none"
                   disabled={isSubmitting}
                 >
-                  ×
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
-                <p className="text-xs text-gray-500 mt-1 text-center">
-                  {index === 0 ? 'Primary' : `Image ${index + 1}`}
-                </p>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Form action buttons */}
-      <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+      {/* Form actions */}
+      <div className="flex justify-end space-x-4">
         <button
           type="button"
           onClick={onCancel}
-          className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium"
-          disabled={isSubmitting || uploadingImages}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          disabled={isSubmitting}
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={isSubmitting || uploadingImages}
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          disabled={isSubmitting}
         >
-          {isSubmitting ? (
-            <span className="flex items-center space-x-2">
-              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span>{room ? 'Updating...' : 'Creating...'}</span>
-            </span>
-          ) : uploadingImages ? (
-            <span className="flex items-center space-x-2">
-              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span>Uploading Images...</span>
-            </span>
-          ) : (
-            room ? 'Update Room' : 'Create Room'
-          )}
+          {isSubmitting ? 'Saving...' : room ? 'Update Room' : 'Create Room'}
         </button>
       </div>
     </form>
