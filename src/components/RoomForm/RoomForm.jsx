@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createRoom, updateRoom, uploadRoomImages } from '../../services/roomService';
 import { showToast } from '../../utils/notifications';
+import { ConfirmationModal } from '../Modal/Modal';
 
 /**
  * RoomForm component for adding/editing rooms (Admin only)
@@ -26,6 +27,12 @@ function RoomForm({ room, onSubmit, onCancel }) {
 
   // Loading state
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Save confirmation modal state
+  const [saveModal, setSaveModal] = useState({
+    isOpen: false,
+    formData: null
+  });
 
   // Populate form with existing room data when editing
   useEffect(() => {
@@ -94,23 +101,35 @@ function RoomForm({ room, onSubmit, onCancel }) {
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Prepare room data
+    const roomData = {
+      name: formData.name.trim(),
+      description: formData.description.trim(),
+      price: parseFloat(formData.price),
+      capacity: parseInt(formData.capacity),
+      images: imageFiles // Include image files for new room creation
+    };
+
+    // Show confirmation modal
+    setSaveModal({
+      isOpen: true,
+      formData: roomData
+    });
+  };
+
+  /**
+   * Confirm and execute the save operation
+   */
+  const confirmSave = async () => {
     setIsSubmitting(true);
     
     try {
-      // Prepare room data
-      const roomData = {
-        name: formData.name.trim(),
-        description: formData.description.trim(),
-        price: parseFloat(formData.price),
-        capacity: parseInt(formData.capacity),
-        images: imageFiles // Include image files for new room creation
-      };
-
       let result;
       
       if (room) {
         // Update existing room
-        result = await updateRoom(room.id, roomData);
+        result = await updateRoom(room.id, saveModal.formData);
         
         // Upload images separately for existing room
         if (imageFiles.length > 0) {
@@ -126,7 +145,7 @@ function RoomForm({ room, onSubmit, onCancel }) {
         }
       } else {
         // Create new room with images
-        result = await createRoom(roomData);
+        result = await createRoom(saveModal.formData);
         showToast.success('Room created successfully');
       }
 
@@ -307,6 +326,18 @@ function RoomForm({ room, onSubmit, onCancel }) {
           {isSubmitting ? 'Saving...' : room ? 'Update Room' : 'Create Room'}
         </button>
       </div>
+
+      {/* Save Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={saveModal.isOpen}
+        onClose={() => setSaveModal({ isOpen: false, formData: null })}
+        onConfirm={confirmSave}
+        title={room ? 'Update Room' : 'Create Room'}
+        message={`Are you sure you want to ${room ? 'update' : 'create'} "${saveModal.formData?.name}"?`}
+        confirmText={room ? 'Update' : 'Create'}
+        cancelText="Cancel"
+        type="info"
+      />
     </form>
   );
 }

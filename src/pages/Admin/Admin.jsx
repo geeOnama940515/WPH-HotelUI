@@ -4,7 +4,9 @@ import { useAuth } from '../../context/AuthContext';
 import RoomForm from '../../components/RoomForm/RoomForm';
 import { getRooms, deleteRoom, updateRoomStatus } from '../../services/roomService';
 import { runAllApiTests } from '../../services/apiTest';
-import { FaUsers, FaDollarSign, FaBed, FaCalendarCheck, FaArrowUp, FaChartLine, FaWifi } from 'react-icons/fa';
+import { FaUsers, FaDollarSign, FaBed, FaCalendarCheck, FaArrowUp, FaChartLine, FaWifi, FaPlus, FaEdit, FaTrash, FaEye, FaTv, FaSnowflake, FaCoffee, FaBath } from 'react-icons/fa';
+import { ConfirmationModal } from '../../components/Modal/Modal';
+import { showToast } from '../../utils/notifications';
 
 function Admin() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -13,6 +15,14 @@ function Admin() {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Delete confirmation modal state
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    roomId: null,
+    roomName: ''
+  });
+  
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -153,14 +163,22 @@ function Admin() {
   };
 
   const handleDeleteRoom = async (roomId) => {
-    if (window.confirm('Are you sure you want to delete this room?')) {
-      try {
-        await deleteRoom(roomId);
-        setRooms(rooms.filter(room => room.id !== roomId));
-      } catch (error) {
-        console.error('Failed to delete room:', error);
-        alert('Failed to delete room. Please try again.');
-      }
+    const room = rooms.find(r => r.id === roomId);
+    setDeleteModal({
+      isOpen: true,
+      roomId: roomId,
+      roomName: room?.name || 'this room'
+    });
+  };
+
+  const confirmDeleteRoom = async () => {
+    try {
+      await deleteRoom(deleteModal.roomId);
+      setRooms(rooms.filter(room => room.id !== deleteModal.roomId));
+      showToast.success('Room deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete room:', error);
+      showToast.error('Failed to delete room. Please try again.');
     }
   };
 
@@ -597,6 +615,18 @@ function Admin() {
           />
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, roomId: null, roomName: '' })}
+        onConfirm={confirmDeleteRoom}
+        title="Delete Room"
+        message={`Are you sure you want to delete "${deleteModal.roomName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

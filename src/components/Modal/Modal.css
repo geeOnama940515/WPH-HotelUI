@@ -28,6 +28,19 @@
   animation: slideIn 0.3s ease-out;
 }
 
+/* Modal Content (updated for new structure) */
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.3s ease-out;
+}
+
 /* Modal Sizes */
 .modal-sm {
   width: 400px;
@@ -80,8 +93,39 @@
   color: #374151;
 }
 
-/* Modal Content */
-.modal-content {
+/* Modal Close Button (updated for new structure) */
+.modal-close {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+/* Modal Body (updated for new structure) */
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  background: white;
+  color: #374151;
+}
+
+/* Modal Content (old structure - keeping for backward compatibility) */
+.modal-content-old {
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
@@ -159,13 +203,14 @@
 
 /* Responsive Design */
 @media (max-width: 640px) {
-  .modal-container {
+  .modal-container,
+  .modal-content {
     width: 95vw;
     margin: 0.5rem;
   }
   
   .modal-header,
-  .modal-content,
+  .modal-body,
   .modal-actions {
     padding-left: 1rem;
     padding-right: 1rem;
