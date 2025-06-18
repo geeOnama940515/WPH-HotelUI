@@ -4,23 +4,25 @@ import { Link } from 'react-router-dom';
 /**
  * RoomCard component displays room information in a card format
  * Used in the rooms listing page to show available rooms
- * Now supports API data structure with images array
+ * Now supports API data structure with images array (array of objects with fileName)
  * 
  * @param {Object} room - Room object with details
  * @param {string} room.id - Room ID
  * @param {string} room.name - Room name
  * @param {string} room.description - Room description
  * @param {number} room.price - Room price per night
- * @param {Array} room.images - Array of room images
+ * @param {Array} room.images - Array of room images (each with fileName)
  * @param {number} room.capacity - Maximum number of guests
  */
 function RoomCard({ room }) {
   const { id, name, description, price, images, capacity } = room;
 
-  // Get the primary image (first image or fallback)
-  const primaryImage = images && images.length > 0 
-    ? images[0].url || images[0] 
-    : 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg'; // Fallback image
+  // Get the primary image (first image's fileName or fallback)
+  let primaryImage = 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg';
+  if (images && images.length > 0 && images[0].fileName) {
+    // If your backend serves images at a specific path, update the URL below:
+    primaryImage = `/images/rooms/${images[0].fileName}`;
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-full">

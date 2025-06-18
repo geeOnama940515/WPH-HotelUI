@@ -124,8 +124,13 @@ function RoomForm({ room, onSubmit, onCancel }) {
           await uploadRoomImages(result.id || room?.id, imageFiles);
         } catch (uploadError) {
           console.error('Image upload failed:', uploadError);
-          // Don't fail the entire operation if image upload fails
-          alert('Room saved successfully, but image upload failed. You can try uploading images again.');
+          // Provide more specific error message
+          const errorMessage = uploadError.message || 'Unknown upload error';
+          if (errorMessage.includes('Unexpected end of JSON input')) {
+            alert('Room saved successfully, but there was an issue with the image upload response. The images may not have been uploaded properly. You can try uploading images again.');
+          } else {
+            alert(`Room saved successfully, but image upload failed: ${errorMessage}. You can try uploading images again.`);
+          }
         } finally {
           setUploadingImages(false);
         }

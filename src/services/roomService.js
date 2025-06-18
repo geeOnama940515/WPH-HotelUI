@@ -10,7 +10,11 @@ import { api } from './api';
  * 
  * @returns {Promise<Array>} Array of room objects
  */
-export const getRooms = () => api.get('/api/room');
+export const getRooms = async () => {
+  const response = await api.get('/api/room');
+  // The actual array of rooms is at response.data.data
+  return response.data.data;
+};
 
 /**
  * Get a specific room by ID
@@ -78,13 +82,10 @@ export const deleteRoom = (roomId) => api.delete(`/api/room/${roomId}`);
 export const uploadRoomImages = async (roomId, imageFiles) => {
   const formData = new FormData();
   
-  // Add room ID
-  formData.append('roomId', roomId);
-  
-  // Add image files
+  // Add image files - use 'files' to match backend controller parameter
   imageFiles.forEach((file, index) => {
     if (file) {
-      formData.append('images', file);
+      formData.append('files', file);
     }
   });
   

@@ -189,9 +189,9 @@ function Booking() {
           {/* Room Selection Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 max-w-6xl mx-auto">
             {rooms.map(room => {
-              // Get the primary image
-              const primaryImage = room.images && room.images.length > 0 
-                ? room.images[0].url || room.images[0] 
+              // Get the primary image for the room (first image's fileName or fallback)
+              const primaryImage = room.images && room.images.length > 0 && room.images[0].fileName
+                ? `/images/rooms/${room.images[0].fileName}`
                 : 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg';
 
               return (

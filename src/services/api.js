@@ -30,9 +30,11 @@ const customFetch = async (endpoint, options = {}) => {
     }
   };
 
+  let response; // Declare response variable outside try block
+
   try {
     // Make the API request
-    const response = await fetch(`${API_URL}${endpoint}`, config);
+    response = await fetch(`${API_URL}${endpoint}`, config);
     
     // Handle 401 Unauthorized - try to refresh token
     if (response.status === 401 && token) {
@@ -67,11 +69,50 @@ const customFetch = async (endpoint, options = {}) => {
       }
     }
 
-    // Parse JSON response
-    const result = await response.json();
+    // Get response text first to check if it's empty
+    const responseText = await response.text();
+    console.log('Response text length:', responseText.length);
+    console.log('Response text preview:', responseText.substring(0, 100));
+    
+    if (!responseText || responseText.trim() === '') {
+      // Empty response
+      if (response.ok) {
+        console.log('Empty response but successful, returning success object');
+        return { success: true, message: 'Operation completed successfully' };
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    }
+    
+    // Check content type
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      // If no content or not JSON, check if it's a successful response
+      if (response.ok) {
+        console.log('Non-JSON response but successful, returning success object');
+        return { success: true, message: 'Operation completed successfully' };
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    }
+
+    // Try to parse JSON
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (parseError) {
+      console.log('JSON parse error:', parseError);
+      if (response.ok) {
+        console.log('JSON parse failed but response was successful, returning success object');
+        return { success: true, message: 'Operation completed successfully' };
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    }
     
     // Handle non-successful responses or failed results
-    if (!response.ok || !result.isSuccess) {
+    const isSuccess = result.isSuccess !== undefined ? result.isSuccess : result.success;
+    if (!response.ok || !isSuccess) {
       const errorMessage = result.message || 
                           (result.errors && result.errors.length > 0 ? result.errors.join(', ') : '') ||
                           `HTTP ${response.status}: ${response.statusText}`;
@@ -81,6 +122,24 @@ const customFetch = async (endpoint, options = {}) => {
     // Return the data from the Result<T> wrapper
     return result.data;
   } catch (error) {
+    // Handle JSON parsing errors specifically
+    if (error.message === 'Unexpected end of JSON input') {
+      console.log('JSON parsing error detected. Response details:', {
+        status: response?.status,
+        statusText: response?.statusText,
+        ok: response?.ok,
+        contentType: response?.headers.get('content-type')
+      });
+      
+      // Check if response was successful despite empty content
+      if (response && response.ok) {
+        console.log('Empty response but successful, returning success object');
+        return { success: true, message: 'Operation completed successfully' };
+      } else {
+        throw new Error(`HTTP ${response?.status || 'Unknown'}: ${response?.statusText || 'No response'}`);
+      }
+    }
+    
     // Re-throw error for handling by calling code
     throw error;
   }
@@ -138,6 +197,16 @@ export const api = {
   postFile: async (endpoint, formData) => {
     const token = localStorage.getItem('token');
     
+    console.log('🚀 Starting file upload to:', `${API_URL}${endpoint}`);
+    console.log('📁 FormData contents:');
+    for (let [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+      } else {
+        console.log(`  ${key}: ${value}`);
+      }
+    }
+    
     try {
       const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
@@ -146,6 +215,13 @@ export const api = {
           // Don't set Content-Type for FormData, let browser set it with boundary
         },
         body: formData
+      });
+
+      console.log('📡 Upload response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
       });
 
       // Handle 401 Unauthorized for file uploads too
@@ -167,7 +243,50 @@ export const api = {
             throw new Error(`HTTP ${retryResponse.status}: ${retryResponse.statusText}`);
           }
           
-          const retryResult = await retryResponse.json();
+          // Check if response has content before parsing JSON
+          const contentType = retryResponse.headers.get('content-type');
+          console.log('Response content-type:', contentType);
+          console.log('Response status:', retryResponse.status);
+          console.log('Response ok:', retryResponse.ok);
+          
+          // Get response text first to check if it's empty
+          const retryResponseText = await retryResponse.text();
+          console.log('Retry response text length:', retryResponseText.length);
+          console.log('Retry response text preview:', retryResponseText.substring(0, 100));
+          
+          if (!retryResponseText || retryResponseText.trim() === '') {
+            // Empty response
+            if (retryResponse.ok) {
+              console.log('Empty retry response but successful, returning success object');
+              return { success: true, message: 'Upload completed successfully' };
+            } else {
+              throw new Error(`HTTP ${retryResponse.status}: ${retryResponse.statusText}`);
+            }
+          }
+          
+          if (!contentType || !contentType.includes('application/json')) {
+            // If no content or not JSON, check if it's a successful response
+            if (retryResponse.ok) {
+              console.log('Non-JSON retry response but successful, returning success object');
+              return { success: true, message: 'Upload completed successfully' };
+            } else {
+              throw new Error(`HTTP ${retryResponse.status}: ${retryResponse.statusText}`);
+            }
+          }
+
+          // Try to parse JSON
+          let retryResult;
+          try {
+            retryResult = JSON.parse(retryResponseText);
+          } catch (parseError) {
+            console.log('Retry JSON parse error:', parseError);
+            if (retryResponse.ok) {
+              console.log('Retry JSON parse failed but response was successful, returning success object');
+              return { success: true, message: 'Upload completed successfully' };
+            } else {
+              throw new Error(`HTTP ${retryResponse.status}: ${retryResponse.statusText}`);
+            }
+          }
           
           if (!retryResult.isSuccess) {
             const errorMessage = retryResult.message || 
@@ -185,10 +304,54 @@ export const api = {
         }
       }
 
-      const result = await response.json();
+      // Check if response has content before parsing JSON
+      const contentType = response.headers.get('content-type');
+      console.log('Response content-type:', contentType);
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
       
+      // Get response text first to check if it's empty
+      const responseText = await response.text();
+      console.log('Response text length:', responseText.length);
+      console.log('Response text preview:', responseText.substring(0, 100));
+      
+      if (!responseText || responseText.trim() === '') {
+        // Empty response
+        if (response.ok) {
+          console.log('Empty response but successful, returning success object');
+          return { success: true, message: 'Upload completed successfully' };
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      }
+      
+      if (!contentType || !contentType.includes('application/json')) {
+        // If no content or not JSON, check if it's a successful response
+        if (response.ok) {
+          console.log('Non-JSON response but successful, returning success object');
+          return { success: true, message: 'Upload completed successfully' };
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      }
+
+      // Try to parse JSON
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.log('JSON parse error:', parseError);
+        if (response.ok) {
+          console.log('JSON parse failed but response was successful, returning success object');
+          return { success: true, message: 'Upload completed successfully' };
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      }
+
       // Handle non-successful responses or failed results
-      if (!response.ok || !result.isSuccess) {
+      const isSuccess = result.isSuccess !== undefined ? result.isSuccess : result.success;
+      if (!response.ok || !isSuccess) {
         const errorMessage = result.message || 
                             (result.errors && result.errors.length > 0 ? result.errors.join(', ') : '') ||
                             `HTTP ${response.status}: ${response.statusText}`;

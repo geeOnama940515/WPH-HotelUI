@@ -121,8 +121,8 @@ function BookingForm({ selectedRoom, onSubmit }) {
           <h3 className="font-medium text-blue-800 mb-2">Selected Room</h3>
           <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
             <img 
-              src={selectedRoom.images && selectedRoom.images.length > 0 
-                ? selectedRoom.images[0].url || selectedRoom.images[0] 
+              src={selectedRoom.images && selectedRoom.images.length > 0 && selectedRoom.images[0].fileName
+                ? `/images/rooms/${selectedRoom.images[0].fileName}`
                 : 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg'} 
               alt={selectedRoom.name}
               className="w-full sm:w-16 h-32 sm:h-16 object-cover rounded"

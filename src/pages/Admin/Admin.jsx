@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import RoomForm from '../../components/RoomForm/RoomForm';
 import { getRooms, deleteRoom, updateRoomStatus } from '../../services/roomService';
-import { FaUsers, FaDollarSign, FaBed, FaCalendarCheck, FaArrowUp, FaChartLine } from 'react-icons/fa';
+import { runAllApiTests } from '../../services/apiTest';
+import { FaUsers, FaDollarSign, FaBed, FaCalendarCheck, FaArrowUp, FaChartLine, FaWifi } from 'react-icons/fa';
 
 function Admin() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -163,6 +164,34 @@ function Admin() {
     }
   };
 
+  /**
+   * Test API connectivity and endpoints
+   */
+  const handleTestApi = async () => {
+    console.log('Starting API connectivity test...');
+    try {
+      const results = await runAllApiTests();
+      console.log('API test completed. Check console for detailed results.');
+      
+      // Show a summary alert
+      const failedEndpoints = [
+        ...results.roomResults.filter(r => !r.allowed),
+        ...results.authResults.filter(r => !r.allowed)
+      ];
+      
+      if (!results.connectivity) {
+        alert('❌ API connectivity failed. Please check if your backend is running on http://localhost:5187');
+      } else if (failedEndpoints.length > 0) {
+        alert(`⚠️ API connected but ${failedEndpoints.length} endpoints returned 405 Method Not Allowed. Check console for details.`);
+      } else {
+        alert('✅ API connectivity test passed! All endpoints are working.');
+      }
+    } catch (error) {
+      console.error('API test failed:', error);
+      alert('❌ API test failed. Check console for details.');
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'confirmed': return 'bg-green-100 text-green-800';
@@ -192,6 +221,23 @@ function Admin() {
 
   const renderDashboard = () => (
     <div className="space-y-6">
+      {/* API Test Section */}
+      <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold mb-2">API Connectivity</h3>
+            <p className="text-sm text-gray-600">Test your backend API connectivity and endpoints</p>
+          </div>
+          <button
+            onClick={handleTestApi}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            <FaWifi className="text-sm" />
+            <span>Test API</span>
+          </button>
+        </div>
+      </div>
+
       {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md">
