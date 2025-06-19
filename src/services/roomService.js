@@ -187,3 +187,40 @@ export const updateRoomStatus = (roomId, status) => {
     newStatus: parseInt(status)
   });
 };
+
+/**
+ * Check room availability for a given date range
+ * @param {string} roomId - Room ID
+ * @param {Date|string} checkIn - Check-in date (Date object or ISO string)
+ * @param {Date|string} checkOut - Check-out date (Date object or ISO string)
+ * @returns {Promise<Object>} Availability result from API
+ */
+export const checkRoomAvailability = async (roomId, checkIn, checkOut) => {
+  // Format dates as YYYY/MM/DD
+  function formatDate(date) {
+    const d = new Date(date);
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${year}/${month}/${day}`;
+  }
+  const checkInStr = formatDate(checkIn);
+  const checkOutStr = formatDate(checkOut);
+  const params = new URLSearchParams({
+    RoomId: roomId, // Capital R
+    CheckIn: checkInStr,
+    CheckOut: checkOutStr
+  });
+  const response = await api.get(`/api/room/room-availability?${params.toString()}`);
+  // Parse the nested response structure
+  let available = false;
+  let message = 'Unknown response';
+  if (response && response.data && typeof response.data.isAvailable === 'boolean') {
+    available = response.data.isAvailable;
+    message = response.message || '';
+  } else if (response && response.isAvailable !== undefined) {
+    available = response.isAvailable;
+    message = response.message || '';
+  }
+  return { available, message };
+};

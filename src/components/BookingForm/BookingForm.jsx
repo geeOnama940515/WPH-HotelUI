@@ -3,6 +3,7 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { getRooms } from '../../services/roomService';
 import { showToast, toastMessages } from '../../utils/notifications';
+import { checkRoomAvailability } from '../../services/roomService';
 
 /**
  * BookingForm component handles guest information and booking details
@@ -28,6 +29,8 @@ function BookingForm({ selectedRoom, onSubmit }) {
   
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const [availabilityResult, setAvailabilityResult] = useState(null);
 
   // Load rooms from API
   useEffect(() => {
@@ -79,6 +82,10 @@ function BookingForm({ selectedRoom, onSubmit }) {
     }
     if (!formData.phoneNumber.trim()) {
       showToast.error('Phone number is required');
+      return false;
+    }
+    if (!formData.address.trim()) {
+      showToast.error('Address is required');
       return false;
     }
     
@@ -139,6 +146,34 @@ function BookingForm({ selectedRoom, onSubmit }) {
 
   // Get selected room data for capacity validation
   const selectedRoomData = rooms.find(room => room.id === formData.roomType);
+
+  // Handler for checking room availability
+  const handleCheckAvailability = async () => {
+    if (!formData.roomType || !formData.checkIn || !formData.checkOut) {
+      setAvailabilityResult(null);
+      return;
+    }
+    setCheckingAvailability(true);
+    setAvailabilityResult(null);
+    try {
+      const result = await checkRoomAvailability(
+        formData.roomType,
+        formData.checkIn,
+        formData.checkOut
+      );
+
+      console.log("result from bookform " + result);
+      if (result && result.available) {
+        setAvailabilityResult(true);
+      } else {
+        setAvailabilityResult(false);
+      }
+    } catch (error) {
+      setAvailabilityResult(false);
+    } finally {
+      setCheckingAvailability(false);
+    }
+  };
 
   return (
     <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md">
@@ -221,14 +256,14 @@ function BookingForm({ selectedRoom, onSubmit }) {
           {/* Address */}
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Address
+              Address *
             </label>
             <input
               type="text"
               value={formData.address}
               onChange={(e) => handleInputChange('address', e.target.value)}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              placeholder="Enter your address (optional)"
+              placeholder="Enter your address"
             />
           </div>
 
@@ -326,6 +361,29 @@ function BookingForm({ selectedRoom, onSubmit }) {
                 placeholderText="Select check-out date"
               />
             </div>
+          </div>
+
+          {/* Check Availability Button */}
+          <div className="mt-4">
+            <button
+              type="button"
+              className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors font-semibold disabled:opacity-60"
+              onClick={handleCheckAvailability}
+              disabled={
+                checkingAvailability ||
+                !formData.roomType ||
+                !formData.checkIn ||
+                !formData.checkOut
+              }
+            >
+              {checkingAvailability ? 'Checking Availability...' : 'Check Availability'}
+            </button>
+            {availabilityResult === true && (
+              <div className="text-green-600 font-semibold mt-2">Date is Available</div>
+            )}
+            {availabilityResult === false && (
+              <div className="text-red-600 font-semibold mt-2">Date is not available</div>
+            )}
           </div>
         </div>
 
