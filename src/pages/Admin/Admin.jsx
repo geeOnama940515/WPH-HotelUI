@@ -7,8 +7,10 @@ import BookingsTable from '../../components/Admin/BookingsTable';
 import RoomsTable from '../../components/Admin/RoomsTable';
 import { getRooms, deleteRoom, updateRoomStatus } from '../../services/roomService';
 import { getAllBookings, updateBookingStatus, updateBookingDates } from '../../services/bookingService';
+import { api } from '../../services/api';
 import { ConfirmationModal } from '../../components/Modal/Modal';
 import { showToast } from '../../utils/notifications';
+import Modal from '../../components/Modal/Modal';
 
 function Admin() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -16,7 +18,9 @@ function Admin() {
   const [editingRoom, setEditingRoom] = useState(null);
   const [rooms, setRooms] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const [error, setError] = useState('');
   
   // Delete confirmation modal state
@@ -107,6 +111,8 @@ function Admin() {
       loadRooms();
     } else if (activeTab === 'bookings') {
       loadBookings();
+    } else if (activeTab === 'messages') {
+      loadMessages();
     }
   }, [activeTab]);
 
@@ -149,6 +155,20 @@ function Admin() {
       setError('Failed to load bookings. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Load contact messages from API
+  const loadMessages = async () => {
+    setLoadingMessages(true);
+    setError('');
+    try {
+      const response = await api.get('/api/contactmessage');
+      setMessages(response || []);
+    } catch (error) {
+      setError('Failed to load messages. Please try again.');
+    } finally {
+      setLoadingMessages(false);
     }
   };
 
@@ -337,6 +357,44 @@ function Admin() {
     });
   };
 
+  const [replyModal, setReplyModal] = useState({ open: false, message: null });
+  const [replyForm, setReplyForm] = useState({ subject: '', body: '' });
+  const [sendingReply, setSendingReply] = useState(false);
+  const [confirmSend, setConfirmSend] = useState(false);
+
+  const openReplyModal = (msg) => {
+    setReplyForm({ subject: `RE: ${msg.subject || ''}`, body: '' });
+    setReplyModal({ open: true, message: msg });
+    setConfirmSend(false);
+  };
+
+  const closeReplyModal = () => {
+    setReplyModal({ open: false, message: null });
+    setReplyForm({ subject: '', body: '' });
+    setConfirmSend(false);
+  };
+
+  const handleReplyChange = (e) => {
+    setReplyForm({ ...replyForm, [e.target.name]: e.target.value });
+  };
+
+  const handleReplySubmit = async () => {
+    setSendingReply(true);
+    try {
+      await api.post(`/api/contactmessage/reply/${replyModal.message.id}`, {
+        subject: replyForm.subject,
+        email: replyModal.message.emailAddress,
+        body: replyForm.body
+      });
+      showToast.success('Reply sent successfully!');
+      closeReplyModal();
+    } catch (err) {
+      showToast.error('Failed to send reply.');
+    } finally {
+      setSendingReply(false);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl lg:text-3xl font-bold mb-6">Admin Dashboard</h1>
@@ -373,6 +431,16 @@ function Admin() {
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm lg:text-base`}
             >
               Rooms
+            </button>
+            <button
+              onClick={() => setActiveTab('messages')}
+              className={`${
+                activeTab === 'messages'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm lg:text-base`}
+            >
+              Messages
             </button>
           </nav>
         </div>
@@ -442,6 +510,55 @@ function Admin() {
         </div>
       )}
 
+      {activeTab === 'messages' && (
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-2xl font-bold mb-4">Contact Messages</h2>
+          {loadingMessages ? (
+            <div>Loading messages...</div>
+          ) : error ? (
+            <div className="text-red-600 mb-4">{error}</div>
+          ) : messages.length === 0 ? (
+            <div>No messages found.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Subject</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Message</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th className="px-4 py-2"></th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {messages.map(msg => (
+                    <tr key={msg.id}>
+                      <td className="px-4 py-2 whitespace-nowrap">{msg.fullname}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{msg.emailAddress}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{msg.phoneNumber}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{msg.subject}</td>
+                      <td className="px-4 py-2 whitespace-pre-line max-w-xs">{msg.message}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{new Date(msg.dateCreated).toLocaleString()}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <button
+                          className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
+                          onClick={() => openReplyModal(msg)}
+                        >
+                          Reply
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
         isOpen={deleteModal.isOpen}
@@ -453,6 +570,79 @@ function Admin() {
         cancelText="Cancel"
         type="danger"
       />
+
+      {/* Reply Modal */}
+      {replyModal.open && (
+        <Modal isOpen={replyModal.open} onClose={closeReplyModal}>
+          <div className="p-4">
+            <h3 className="text-xl font-bold mb-4">Reply to {replyModal.message.fullname}</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+              <input
+                type="text"
+                name="subject"
+                value={replyForm.subject}
+                onChange={handleReplyChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Subject"
+                disabled={sendingReply}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Body</label>
+              <textarea
+                name="body"
+                value={replyForm.body}
+                onChange={handleReplyChange}
+                rows={6}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Type your reply here..."
+                disabled={sendingReply}
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+                onClick={closeReplyModal}
+                disabled={sendingReply}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                onClick={() => setConfirmSend(true)}
+                disabled={sendingReply || !replyForm.subject.trim() || !replyForm.body.trim()}
+              >
+                Send Reply
+              </button>
+            </div>
+          </div>
+          {/* Confirmation Dialog */}
+          {confirmSend && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+              <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full">
+                <h4 className="text-lg font-semibold mb-4">Send this reply?</h4>
+                <div className="flex justify-end space-x-2">
+                  <button
+                    className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+                    onClick={() => setConfirmSend(false)}
+                    disabled={sendingReply}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    onClick={handleReplySubmit}
+                    disabled={sendingReply}
+                  >
+                    {sendingReply ? 'Sending...' : 'Confirm'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </Modal>
+      )}
     </div>
   );
 }

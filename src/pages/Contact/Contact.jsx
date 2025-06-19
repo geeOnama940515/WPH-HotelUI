@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaClock } from 'react-icons/fa';
+import { api } from '../../services/api';
 
 function Contact() {
   const [formData, setFormData] = useState({
@@ -10,6 +11,7 @@ function Contact() {
     message: ''
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData({
@@ -18,23 +20,33 @@ function Contact() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would typically send the form data to your backend
-    console.log('Contact form submitted:', formData);
-    setIsSubmitted(true);
-    
-    // Reset form after 3 seconds
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: ''
-      });
-    }, 3000);
+    setError('');
+    try {
+      const payload = {
+        fullname: formData.name,
+        emailAddress: formData.email,
+        phoneNumber: formData.phone,
+        subject: formData.subject,
+        message: formData.message
+      };
+      await api.post('/api/contactmessage', payload);
+      setIsSubmitted(true);
+      // Reset form after 3 seconds
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: ''
+        });
+      }, 3000);
+    } catch (err) {
+      setError('Failed to send message. Please try again.');
+    }
   };
 
   return (
@@ -111,6 +123,10 @@ function Contact() {
                 <div className="text-green-600 text-5xl mb-4">✓</div>
                 <h3 className="text-xl font-semibold text-green-600 mb-2">Message Sent!</h3>
                 <p className="text-gray-600">Thank you for contacting us. We'll get back to you soon.</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-4">
+                <div className="text-red-600 text-lg font-semibold mb-2">{error}</div>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
