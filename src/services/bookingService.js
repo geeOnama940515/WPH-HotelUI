@@ -36,7 +36,7 @@ export const createBooking = (bookingData) => {
     guestName: bookingData.guestFullName
   };
 
-  return api.post('/api/booking', apiData);
+  return api.post('/api/bookings', apiData);
 };
 
 /**
@@ -57,7 +57,7 @@ export const updateBookingStatus = (bookingId, status) => {
   // Convert to integer if it's a string
   const newStatus = parseInt(status);
   
-  return api.put(`/api/booking/${bookingId}/status`, { 
+  return api.put(`/api/bookings/${bookingId}/status`, { 
     bookingId: bookingId,
     newStatus: newStatus
   });
@@ -68,14 +68,14 @@ export const updateBookingStatus = (bookingId, status) => {
  * 
  * @returns {Promise<Array>} Array of all bookings in the system
  */
-export const getAllBookings = () => api.get('/api/booking');
+export const getAllBookings = () => api.get('/api/bookings');
 
 /**
  * Get a booking by its public token
  * @param {string} token - The booking token
  * @returns {Promise<Object>} Booking object
  */
-export const getBookingByToken = (token) => api.get(`/api/booking/view/${token}`);
+export const getBookingByToken = (token) => api.get(`/api/bookings/view/${token}`);
 
 const fetchBooking = async (token) => {
 
@@ -118,7 +118,7 @@ const fetchBooking = async (token) => {
  * @returns {Promise<Object>} Updated booking object
  */
 export const updateBookingDates = (bookingId, checkIn, checkOut) => 
-  api.put(`/api/booking/${bookingId}/dates`, { 
+  api.put(`/api/bookings/${bookingId}/dates`, { 
     checkIn: checkIn,
     checkOut: checkOut
   });

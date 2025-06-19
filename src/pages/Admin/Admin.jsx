@@ -163,7 +163,7 @@ function Admin() {
     setLoadingMessages(true);
     setError('');
     try {
-      const response = await api.get('/api/contactmessage');
+      const response = await api.get('/api/contact-messages');
       setMessages(response || []);
     } catch (error) {
       setError('Failed to load messages. Please try again.');
@@ -382,7 +382,7 @@ function Admin() {
   const handleReplySubmit = async () => {
     setSendingReply(true);
     try {
-      await api.post(`/api/contactmessage/reply/${replyModal.message.id}`, {
+      await api.post(`/api/contact-messages/reply/${replyModal.message.id}`, {
         subject: replyForm.subject,
         email: replyModal.message.emailAddress,
         body: replyForm.body

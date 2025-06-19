@@ -12,7 +12,7 @@ import { api } from './api';
  */
 
 export const getRooms = async () => {
-  const response = await api.get('/api/room');
+  const response = await api.get('/api/rooms');
 
   // response is already unwrapped, so this is the room list
   console.log('response (unwrapped):', response);
@@ -28,7 +28,7 @@ export const getRooms = async () => {
  * @returns {Promise<Object>} Room object
  */
 export const getRoomById = async (roomId) => {
-  const response = await api.get(`/api/room/${roomId}`);
+  const response = await api.get(`/api/rooms/${roomId}`);
   
   // The response is double-wrapped, so we need to access response.data.data
   console.log('getRoomById response (unwrapped):', response);
@@ -64,7 +64,7 @@ export const createRoom = async (roomData) => {
     });
   }
   
-  return api.uploadFile('/api/room/with-images', formData, 'POST');
+  return api.uploadFile('/api/rooms/with-images', formData, 'POST');
 };
 
 /**
@@ -124,7 +124,7 @@ export const updateRoomWithImages = async (roomId, roomData) => {
     // For now, this is a limitation - the backend needs to be enhanced
   }
   
-  return api.uploadFile(`/api/room/${roomId}/with-images`, formData, 'PUT');
+  return api.uploadFile(`/api/rooms/${roomId}/with-images`, formData, 'PUT');
 };
 
 /**
@@ -142,7 +142,7 @@ export const updateRoom = (roomId, roomData) => {
     capacity: roomData.capacity
   };
   
-  return api.put(`/api/room/${roomId}`, updateRoomDto);
+  return api.put(`/api/rooms/${roomId}`, updateRoomDto);
 };
 
 /**
@@ -151,7 +151,7 @@ export const updateRoom = (roomId, roomData) => {
  * @param {string} roomId - Room ID to delete
  * @returns {Promise<Object>} Deletion confirmation
  */
-export const deleteRoom = (roomId) => api.delete(`/api/room/${roomId}`);
+export const deleteRoom = (roomId) => api.delete(`/api/rooms/${roomId}`);
 
 /**
  * Upload room images (admin function)
@@ -170,7 +170,7 @@ export const uploadRoomImages = async (roomId, imageFiles) => {
     }
   });
   
-  return api.uploadFile(`/api/room/${roomId}/images`, formData, 'POST');
+  return api.uploadFile(`/api/rooms/${roomId}/images`, formData, 'POST');
 };
 
 /**
@@ -182,7 +182,7 @@ export const uploadRoomImages = async (roomId, imageFiles) => {
  */
 export const updateRoomStatus = (roomId, status) => {
   console.log(`roomId : ${roomId} + status ${status}`);
-  return api.put(`/api/room/${roomId}/status`, { 
+  return api.put(`/api/rooms/${roomId}/status`, { 
     roomId: roomId,
     newStatus: parseInt(status)
   });
@@ -211,7 +211,7 @@ export const checkRoomAvailability = async (roomId, checkIn, checkOut) => {
     CheckIn: checkInStr,
     CheckOut: checkOutStr
   });
-  const response = await api.get(`/api/room/room-availability?${params.toString()}`);
+  const response = await api.get(`/api/rooms/room-availability?${params.toString()}`);
   // Parse the nested response structure
   let available = false;
   let message = 'Unknown response';
