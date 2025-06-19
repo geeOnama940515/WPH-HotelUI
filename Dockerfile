@@ -8,9 +8,17 @@ RUN npm install
 
 COPY . .
 
-RUN npm run build
+# Build arguments for environment variables
+ARG VITE_API_URL=https://wph-backend.gregdoesdev.xyz
+ARG VITE_DEV_MODE=false
+ARG VITE_ENABLE_API_LOGGING=false
 
-ENV VITE_API_URL=https://wph-backend.gregdoesdev.xyz
+# Set environment variables for build
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_DEV_MODE=$VITE_DEV_MODE
+ENV VITE_ENABLE_API_LOGGING=$VITE_ENABLE_API_LOGGING
+
+RUN npm run build
 
 EXPOSE 4174
 
