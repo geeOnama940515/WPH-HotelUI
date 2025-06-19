@@ -252,9 +252,10 @@ function Admin() {
       setRooms(rooms.map(room => 
         room.id === roomId ? { ...room, status: parseInt(newStatus) } : room
       ));
+      showToast.success('Room status updated successfully');
     } catch (error) {
       console.error('Failed to update room status:', error);
-      alert('Failed to update room status. Please try again.');
+      showToast.error('Failed to update room status. Please try again.');
     }
   };
 
