@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import RoomForm from '../../components/RoomForm/RoomForm';
+import UserForm from '../../components/Admin/UserForm';
 import Dashboard from '../../components/Admin/Dashboard';
 import BookingsTable from '../../components/Admin/BookingsTable';
 import RoomsTable from '../../components/Admin/RoomsTable';
+import UsersTable from '../../components/Admin/UsersTable';
 import { getRooms, deleteRoom, updateRoomStatus } from '../../services/roomService';
 import { getAllBookings, updateBookingStatus, updateBookingDates } from '../../services/bookingService';
+import { getAllUsers, deleteUser, updateUserRole, updateUserStatus } from '../../services/userService';
 import { api } from '../../services/api';
 import { ConfirmationModal } from '../../components/Modal/Modal';
 import { showToast } from '../../utils/notifications';
@@ -15,9 +18,12 @@ import Modal from '../../components/Modal/Modal';
 function Admin() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showRoomForm, setShowRoomForm] = useState(false);
+  const [showUserForm, setShowUserForm] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
   const [rooms, setRooms] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -26,8 +32,9 @@ function Admin() {
   // Delete confirmation modal state
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
-    roomId: null,
-    roomName: ''
+    type: '', // 'room' or 'user'
+    itemId: null,
+    itemName: ''
   });
   
   // Booking modal state
@@ -105,12 +112,14 @@ function Admin() {
     { month: 'Jun', revenue: 510000, bookings: 34 }
   ];
 
-  // Load rooms from API
+  // Load data based on active tab
   useEffect(() => {
     if (activeTab === 'rooms') {
       loadRooms();
     } else if (activeTab === 'bookings') {
       loadBookings();
+    } else if (activeTab === 'users') {
+      loadUsers();
     } else if (activeTab === 'messages') {
       loadMessages();
     }
@@ -153,6 +162,23 @@ function Admin() {
     } catch (error) {
       console.error('Failed to load bookings:', error);
       setError('Failed to load bookings. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Load users from API
+   */
+  const loadUsers = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const usersData = await getAllUsers();
+      setUsers(usersData.data || []);
+    } catch (error) {
+      console.error('Failed to load users:', error);
+      setError('Failed to load users. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -259,6 +285,34 @@ function Admin() {
     }
   };
 
+  const handleUserRoleChange = async (userId, newRole) => {
+    try {
+      await updateUserRole(userId, newRole);
+      // Update local state
+      setUsers(users.map(user => 
+        user.id === userId ? { ...user, role: newRole } : user
+      ));
+      showToast.success('User role updated successfully');
+    } catch (error) {
+      console.error('Failed to update user role:', error);
+      showToast.error('Failed to update user role. Please try again.');
+    }
+  };
+
+  const handleUserStatusChange = async (userId, newStatus) => {
+    try {
+      await updateUserStatus(userId, newStatus);
+      // Update local state
+      setUsers(users.map(user => 
+        user.id === userId ? { ...user, status: newStatus } : user
+      ));
+      showToast.success('User status updated successfully');
+    } catch (error) {
+      console.error('Failed to update user status:', error);
+      showToast.error('Failed to update user status. Please try again.');
+    }
+  };
+
   const handleAddRoom = (roomData) => {
     setShowRoomForm(false);
     loadRooms(); // Reload rooms to get the latest data
@@ -279,19 +333,52 @@ function Admin() {
     const room = rooms.find(r => r.id === roomId);
     setDeleteModal({
       isOpen: true,
-      roomId: roomId,
-      roomName: room?.name || 'this room'
+      type: 'room',
+      itemId: roomId,
+      itemName: room?.name || 'this room'
     });
   };
 
-  const confirmDeleteRoom = async () => {
+  const handleAddUser = (userData) => {
+    setShowUserForm(false);
+    loadUsers(); // Reload users to get the latest data
+  };
+
+  const handleEditUser = (user) => {
+    setEditingUser(user);
+    setShowUserForm(true);
+  };
+
+  const handleUpdateUser = (userData) => {
+    setShowUserForm(false);
+    setEditingUser(null);
+    loadUsers(); // Reload users to get the latest data
+  };
+
+  const handleDeleteUser = async (userId) => {
+    const user = users.find(u => u.id === userId);
+    setDeleteModal({
+      isOpen: true,
+      type: 'user',
+      itemId: userId,
+      itemName: user ? `${user.firstName} ${user.lastName}` : 'this user'
+    });
+  };
+
+  const confirmDelete = async () => {
     try {
-      await deleteRoom(deleteModal.roomId);
-      setRooms(rooms.filter(room => room.id !== deleteModal.roomId));
-      showToast.success('Room deleted successfully');
+      if (deleteModal.type === 'room') {
+        await deleteRoom(deleteModal.itemId);
+        setRooms(rooms.filter(room => room.id !== deleteModal.itemId));
+        showToast.success('Room deleted successfully');
+      } else if (deleteModal.type === 'user') {
+        await deleteUser(deleteModal.itemId);
+        setUsers(users.filter(user => user.id !== deleteModal.itemId));
+        showToast.success('User deleted successfully');
+      }
     } catch (error) {
-      console.error('Failed to delete room:', error);
-      showToast.error('Failed to delete room. Please try again.');
+      console.error(`Failed to delete ${deleteModal.type}:`, error);
+      showToast.error(`Failed to delete ${deleteModal.type}. Please try again.`);
     }
   };
 
@@ -349,6 +436,14 @@ function Admin() {
       case 4: return 'Inactive';
       default: return 'Unknown';
     }
+  };
+
+  const getUserStatusText = (status) => {
+    return status || 'Active';
+  };
+
+  const getUserRoleText = (role) => {
+    return role || 'User';
   };
 
   const handleViewBooking = (booking) => {
@@ -434,6 +529,16 @@ function Admin() {
               Rooms
             </button>
             <button
+              onClick={() => setActiveTab('users')}
+              className={`${
+                activeTab === 'users'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm lg:text-base`}
+            >
+              Users
+            </button>
+            <button
               onClick={() => setActiveTab('messages')}
               className={`${
                 activeTab === 'messages'
@@ -511,6 +616,36 @@ function Admin() {
         </div>
       )}
 
+      {activeTab === 'users' && !showUserForm && (
+        <UsersTable
+          users={users}
+          loading={loading}
+          error={error}
+          handleEditUser={handleEditUser}
+          handleDeleteUser={handleDeleteUser}
+          handleUserRoleChange={handleUserRoleChange}
+          handleUserStatusChange={handleUserStatusChange}
+          getUserStatusText={getUserStatusText}
+          getUserRoleText={getUserRoleText}
+        />
+      )}
+
+      {activeTab === 'users' && showUserForm && (
+        <div className="bg-white shadow-md rounded-lg p-4 lg:p-6">
+          <h2 className="text-xl font-semibold mb-4">
+            {editingUser ? 'Edit User' : 'Add New User'}
+          </h2>
+          <UserForm
+            user={editingUser}
+            onSubmit={editingUser ? handleUpdateUser : handleAddUser}
+            onCancel={() => {
+              setShowUserForm(false);
+              setEditingUser(null);
+            }}
+          />
+        </div>
+      )}
+
       {activeTab === 'messages' && (
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-2xl font-bold mb-4">Contact Messages</h2>
@@ -563,10 +698,10 @@ function Admin() {
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
         isOpen={deleteModal.isOpen}
-        onClose={() => setDeleteModal({ isOpen: false, roomId: null, roomName: '' })}
-        onConfirm={confirmDeleteRoom}
-        title="Delete Room"
-        message={`Are you sure you want to delete "${deleteModal.roomName}"? This action cannot be undone.`}
+        onClose={() => setDeleteModal({ isOpen: false, type: '', itemId: null, itemName: '' })}
+        onConfirm={confirmDelete}
+        title={`Delete ${deleteModal.type === 'room' ? 'Room' : 'User'}`}
+        message={`Are you sure you want to delete "${deleteModal.itemName}"? This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
         type="danger"
