@@ -48,10 +48,6 @@ function UsersTable({
     return user.roles && user.roles.length > 0 ? user.roles[0] : 'User';
   };
 
-  // Debug logging
-  console.log('UsersTable received users:', users);
-  console.log('Users length:', users?.length);
-
   return (
     <div>
       <div className="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
@@ -78,17 +74,6 @@ function UsersTable({
         </div>
       ) : (
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          {/* Debug info */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-              <div className="text-sm text-yellow-700">
-                <p><strong>Debug Info:</strong></p>
-                <p>Users array length: {users?.length || 0}</p>
-                <p>Users data: {JSON.stringify(users?.slice(0, 1), null, 2)}</p>
-              </div>
-            </div>
-          )}
-          
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -107,8 +92,6 @@ function UsersTable({
                   const isProcessing = processingUsers.has(user.userId);
                   const userRole = getUserRole(user);
                   const isAdmin = userRole === 'Administrator';
-                  
-                  console.log('Rendering user:', user.firstName, user.lastName, 'Role:', userRole, 'Enabled:', enabled);
                   
                   return (
                     <tr key={user.userId}>
