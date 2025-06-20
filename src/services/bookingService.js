@@ -106,7 +106,26 @@ export const updateBookingStatus = (bookingId, status) => {
  * 
  * @returns {Promise<Array>} Array of all bookings in the system
  */
-export const getAllBookings = () => api.get('/api/bookings');
+export const getAllBookings = async () => {
+  const response = await api.get('/api/bookings');
+  
+  // response is already unwrapped by api.js
+  console.log('getAllBookings response (unwrapped):', response);
+  
+  // Check if response is already an array (direct data)
+  if (Array.isArray(response)) {
+    return response;
+  }
+  
+  // If response has a data property that's an array, use that
+  if (response && Array.isArray(response.data)) {
+    return response.data;
+  }
+  
+  // Fallback - return empty array if structure is unexpected
+  console.warn('Unexpected getAllBookings response structure:', response);
+  return [];
+};
 
 /**
  * Get a booking by its public token
@@ -114,38 +133,6 @@ export const getAllBookings = () => api.get('/api/bookings');
  * @returns {Promise<Object>} Booking object
  */
 export const getBookingByToken = (token) => api.get(`/api/bookings/view/${token}`);
-
-const fetchBooking = async (token) => {
-
-  console.log('fetchBooking', token);
-  setLoading(true);
-  setError('');
-  try {
-    const booking = await getBookingByToken(token);
-    console.log('API booking response:', booking);
-    if (!booking || !booking.data) {
-      setError('Booking not found or invalid token.');
-      setLoading(false);
-      return;
-    }
-    const b = booking.data;
-    setBookingData({
-      guestFullName: b.guestName,
-      emailAddress: b.emailAddress,
-      phoneNumber: b.phone,
-      address: b.address,
-      numberOfGuests: b.guests,
-      specialRequests: b.specialRequests,
-      roomType: b.roomId,
-      checkIn: b.checkIn,
-      checkOut: b.checkOut,
-    });
-  } catch (err) {
-    setError('Booking not found or invalid token.');
-  } finally {
-    setLoading(false);
-  }
-};
 
 /**
  * Update booking dates (admin function)

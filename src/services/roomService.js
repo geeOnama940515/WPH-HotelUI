@@ -14,11 +14,22 @@ import { api } from './api';
 export const getRooms = async () => {
   const response = await api.get('/api/rooms');
 
-  // response is already unwrapped, so this is the room list
-  console.log('response (unwrapped):', response);
-  const rooms = response.data; // because `data` is the array of rooms
-
-  return rooms;
+  // response is already unwrapped by api.js, so this should be the room list directly
+  console.log('getRooms response (unwrapped):', response);
+  
+  // Check if response is already an array (direct data)
+  if (Array.isArray(response)) {
+    return response;
+  }
+  
+  // If response has a data property that's an array, use that
+  if (response && Array.isArray(response.data)) {
+    return response.data;
+  }
+  
+  // Fallback - return empty array if structure is unexpected
+  console.warn('Unexpected getRooms response structure:', response);
+  return [];
 };
 
 /**
@@ -30,11 +41,22 @@ export const getRooms = async () => {
 export const getRoomById = async (roomId) => {
   const response = await api.get(`/api/rooms/${roomId}`);
   
-  // The response is double-wrapped, so we need to access response.data.data
+  // response is already unwrapped by api.js
   console.log('getRoomById response (unwrapped):', response);
-  console.log('getRoomById response.data:', response.data);
   
-  return response.data;
+  // Check if response is the room object directly
+  if (response && (response.id || response.roomId)) {
+    return response;
+  }
+  
+  // If response has a data property with the room, use that
+  if (response && response.data && (response.data.id || response.data.roomId)) {
+    return response.data;
+  }
+  
+  // Fallback
+  console.warn('Unexpected getRoomById response structure:', response);
+  return response;
 };
 
 /**

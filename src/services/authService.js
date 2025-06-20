@@ -121,6 +121,30 @@ export const register = async (userData) => {
 };
 
 /**
+ * Change user password
+ * 
+ * @param {string} userId - User ID
+ * @param {string} currentPassword - Current password
+ * @param {string} newPassword - New password
+ * @param {string} confirmNewPassword - Confirmation of new password
+ * @returns {Promise<Object>} Password change result
+ */
+export const changePassword = async (userId, currentPassword, newPassword, confirmNewPassword) => {
+  try {
+    const response = await api.post('/api/auth/change-password', {
+      userId,
+      currentPassword,
+      newPassword,
+      confirmNewPassword
+    });
+
+    return response;
+  } catch (error) {
+    throw new Error(error.message || 'Failed to change password');
+  }
+};
+
+/**
  * Refresh JWT token using refresh token
  * 
  * @returns {Promise<string>} New JWT token
