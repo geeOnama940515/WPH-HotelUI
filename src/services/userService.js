@@ -25,10 +25,11 @@ export const getProfile = () => api.get('/profile');
 
 /**
  * Get all users (admin function)
+ * Uses the correct endpoint: /api/auth/list-users
  * 
- * @returns {Promise<Array>} Array of all users in the system
+ * @returns {Promise<Object>} Response with users array
  */
-export const getAllUsers = () => api.get('/api/users');
+export const getAllUsers = () => api.get('/api/auth/list-users');
 
 /**
  * Get a specific user by ID (admin function)
@@ -90,6 +91,24 @@ export const updateUserRole = (userId, role) =>
  */
 export const updateUserStatus = (userId, status) => 
   api.put(`/api/users/${userId}/status`, { status });
+
+/**
+ * Enable user account (admin function)
+ * 
+ * @param {string} userId - User ID to enable
+ * @returns {Promise<Object>} Updated user object
+ */
+export const enableUserAccount = (userId) => 
+  api.put(`/api/auth/enable-account/${userId}`, {});
+
+/**
+ * Disable user account (admin function)
+ * 
+ * @param {string} userId - User ID to disable
+ * @returns {Promise<Object>} Updated user object
+ */
+export const disableUserAccount = (userId) => 
+  api.put(`/api/auth/disable-account/${userId}`, {});
 
 /**
  * Search users (admin function)

@@ -9,7 +9,7 @@ import RoomsTable from '../../components/Admin/RoomsTable';
 import UsersTable from '../../components/Admin/UsersTable';
 import { getRooms, deleteRoom, updateRoomStatus } from '../../services/roomService';
 import { getAllBookings, updateBookingStatus, updateBookingDates } from '../../services/bookingService';
-import { getAllUsers, deleteUser, updateUserRole, updateUserStatus } from '../../services/userService';
+import { getAllUsers, deleteUser, updateUserRole, updateUserStatus, enableUserAccount, disableUserAccount } from '../../services/userService';
 import { api } from '../../services/api';
 import { ConfirmationModal } from '../../components/Modal/Modal';
 import { showToast } from '../../utils/notifications';
@@ -174,8 +174,10 @@ function Admin() {
     setLoading(true);
     setError('');
     try {
-      const usersData = await getAllUsers();
-      setUsers(usersData.data || []);
+      const response = await getAllUsers();
+      console.log('Users API response:', response);
+      // The API returns { success: true, message: "Users retrieved successfully", data: [...] }
+      setUsers(response.data || []);
     } catch (error) {
       console.error('Failed to load users:', error);
       setError('Failed to load users. Please try again.');
@@ -290,7 +292,7 @@ function Admin() {
       await updateUserRole(userId, newRole);
       // Update local state
       setUsers(users.map(user => 
-        user.id === userId ? { ...user, role: newRole } : user
+        user.userId === userId ? { ...user, roles: [newRole] } : user
       ));
       showToast.success('User role updated successfully');
     } catch (error) {
@@ -304,12 +306,44 @@ function Admin() {
       await updateUserStatus(userId, newStatus);
       // Update local state
       setUsers(users.map(user => 
-        user.id === userId ? { ...user, status: newStatus } : user
+        user.userId === userId ? { ...user, status: newStatus } : user
       ));
       showToast.success('User status updated successfully');
     } catch (error) {
       console.error('Failed to update user status:', error);
       showToast.error('Failed to update user status. Please try again.');
+    }
+  };
+
+  const handleEnableAccount = async (userId) => {
+    try {
+      await enableUserAccount(userId);
+      // Update local state - when enabled, user should have their role back
+      setUsers(users.map(user => 
+        user.userId === userId ? { ...user, roles: user.roles && user.roles.length > 0 ? user.roles : ['User'] } : user
+      ));
+      showToast.success('User account enabled successfully');
+      // Reload users to get fresh data
+      loadUsers();
+    } catch (error) {
+      console.error('Failed to enable user account:', error);
+      showToast.error('Failed to enable user account. Please try again.');
+    }
+  };
+
+  const handleDisableAccount = async (userId) => {
+    try {
+      await disableUserAccount(userId);
+      // Update local state - when disabled, user should have no roles
+      setUsers(users.map(user => 
+        user.userId === userId ? { ...user, roles: [] } : user
+      ));
+      showToast.success('User account disabled successfully');
+      // Reload users to get fresh data
+      loadUsers();
+    } catch (error) {
+      console.error('Failed to disable user account:', error);
+      showToast.error('Failed to disable user account. Please try again.');
     }
   };
 
@@ -356,7 +390,7 @@ function Admin() {
   };
 
   const handleDeleteUser = async (userId) => {
-    const user = users.find(u => u.id === userId);
+    const user = users.find(u => u.userId === userId);
     setDeleteModal({
       isOpen: true,
       type: 'user',
@@ -373,7 +407,7 @@ function Admin() {
         showToast.success('Room deleted successfully');
       } else if (deleteModal.type === 'user') {
         await deleteUser(deleteModal.itemId);
-        setUsers(users.filter(user => user.id !== deleteModal.itemId));
+        setUsers(users.filter(user => user.userId !== deleteModal.itemId));
         showToast.success('User deleted successfully');
       }
     } catch (error) {
@@ -625,6 +659,8 @@ function Admin() {
           handleDeleteUser={handleDeleteUser}
           handleUserRoleChange={handleUserRoleChange}
           handleUserStatusChange={handleUserStatusChange}
+          handleEnableAccount={handleEnableAccount}
+          handleDisableAccount={handleDisableAccount}
           getUserStatusText={getUserStatusText}
           getUserRoleText={getUserRoleText}
         />
