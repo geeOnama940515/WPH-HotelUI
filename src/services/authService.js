@@ -41,7 +41,7 @@ export const login = async (email, password) => {
     localStorage.setItem('refreshToken', data.refreshToken);
     localStorage.setItem('tokenExpiry', data.expiresAt);
 
-    // Create user object
+    // Create user object with role information
     const user = {
       id: data.userId,
       email: data.email,
@@ -49,7 +49,9 @@ export const login = async (email, password) => {
       lastName: data.lastName,
       fullName: `${data.firstName} ${data.lastName}`,
       role: data.role,
-      isAdmin: data.role === 'Administrator'
+      isAdmin: data.role === 'Administrator' || data.role === 'HotelManager',
+      isSuperAdmin: data.role === 'Administrator', // Only Administrator can manage users
+      isHotelManager: data.role === 'HotelManager'
     };
 
     return user;
@@ -99,7 +101,7 @@ export const register = async (userData) => {
     localStorage.setItem('refreshToken', data.refreshToken);
     localStorage.setItem('tokenExpiry', data.expiresAt);
 
-    // Create user object
+    // Create user object with role information
     const user = {
       id: data.userId,
       email: data.email,
@@ -107,7 +109,9 @@ export const register = async (userData) => {
       lastName: data.lastName,
       fullName: `${data.firstName} ${data.lastName}`,
       role: data.role,
-      isAdmin: data.role === 'Administrator'
+      isAdmin: data.role === 'Administrator' || data.role === 'HotelManager',
+      isSuperAdmin: data.role === 'Administrator', // Only Administrator can manage users
+      isHotelManager: data.role === 'HotelManager'
     };
 
     return user;
@@ -224,14 +228,18 @@ export const getCurrentUser = () => {
     const payload = JSON.parse(atob(token.split('.')[1]));
     
     // Extract user information from JWT claims
+    const role = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+    
     const user = {
       id: payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'],
       email: payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'],
       firstName: payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname'],
       lastName: payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname'],
-      role: payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'],
+      role: role,
       fullName: `${payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname']} ${payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname']}`,
-      isAdmin: payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] === 'Administrator'
+      isAdmin: role === 'Administrator' || role === 'HotelManager',
+      isSuperAdmin: role === 'Administrator', // Only Administrator can manage users
+      isHotelManager: role === 'HotelManager'
     };
 
     return user;
