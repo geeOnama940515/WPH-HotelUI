@@ -38,10 +38,19 @@ function UsersTable({
   };
 
   const isUserEnabled = (user) => {
-    // Check if user is enabled based on roles array or status
+    // Check if user is enabled based on roles array
     // If user has roles, they are enabled; if no roles or empty array, they are disabled
     return user.roles && user.roles.length > 0;
   };
+
+  const getUserRole = (user) => {
+    // Get the first role from the roles array, or default to 'User'
+    return user.roles && user.roles.length > 0 ? user.roles[0] : 'User';
+  };
+
+  // Debug logging
+  console.log('UsersTable received users:', users);
+  console.log('Users length:', users?.length);
 
   return (
     <div>
@@ -69,6 +78,17 @@ function UsersTable({
         </div>
       ) : (
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
+          {/* Debug info */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+              <div className="text-sm text-yellow-700">
+                <p><strong>Debug Info:</strong></p>
+                <p>Users array length: {users?.length || 0}</p>
+                <p>Users data: {JSON.stringify(users?.slice(0, 1), null, 2)}</p>
+              </div>
+            </div>
+          )}
+          
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -82,11 +102,13 @@ function UsersTable({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((user) => {
+                {users && users.length > 0 ? users.map((user) => {
                   const enabled = isUserEnabled(user);
                   const isProcessing = processingUsers.has(user.userId);
-                  const userRole = user.roles && user.roles.length > 0 ? user.roles[0] : 'User';
+                  const userRole = getUserRole(user);
                   const isAdmin = userRole === 'Administrator';
+                  
+                  console.log('Rendering user:', user.firstName, user.lastName, 'Role:', userRole, 'Enabled:', enabled);
                   
                   return (
                     <tr key={user.userId}>
@@ -164,16 +186,16 @@ function UsersTable({
                       </td>
                     </tr>
                   );
-                })}
+                }) : (
+                  <tr>
+                    <td colSpan="6" className="px-4 lg:px-6 py-8 text-center text-gray-500">
+                      {users === null || users === undefined ? 'Loading users...' : 'No users found.'}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
-          
-          {users.length === 0 && !loading && (
-            <div className="p-8 text-center text-gray-500">
-              No users found.
-            </div>
-          )}
         </div>
       )}
     </div>

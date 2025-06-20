@@ -189,11 +189,24 @@ function Admin() {
     try {
       const response = await getAllUsers();
       console.log('Users API response:', response);
-      // The API returns { success: true, message: "Users retrieved successfully", data: [...] }
-      setUsers(response.data || []);
+      
+      // The API response structure is: { success: true, message: "Users retrieved successfully", data: [...] }
+      // But our api.js already unwraps it, so response should be the data array directly
+      if (Array.isArray(response)) {
+        console.log('Response is array, setting users directly:', response);
+        setUsers(response);
+      } else if (response && Array.isArray(response.data)) {
+        console.log('Response has data property, using response.data:', response.data);
+        setUsers(response.data);
+      } else {
+        console.error('Unexpected response format:', response);
+        setUsers([]);
+        setError('Unexpected response format from server.');
+      }
     } catch (error) {
       console.error('Failed to load users:', error);
       setError('Failed to load users. Please try again.');
+      setUsers([]);
     } finally {
       setLoading(false);
     }
