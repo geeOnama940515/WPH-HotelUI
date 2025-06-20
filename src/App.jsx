@@ -10,7 +10,6 @@ import RoomDetails from './pages/RoomDetails/RoomDetails';
 import Booking from './pages/Booking/Booking';
 import Auth from './pages/Auth/Auth';
 import Admin from './pages/Admin/Admin';
-import MyBookings from './pages/MyBookings/MyBookings';
 import Contact from './pages/Contact/Contact';
 import Profile from './pages/Profile/Profile';
 import { AuthProvider } from './context/AuthContext';
@@ -42,7 +41,6 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/admin" element={<Admin />} />
-              <Route path="/my-bookings" element={<MyBookings />} />
               <Route path="/profile" element={<Profile />} />
               {/* Catch-all route - redirect to home for any unmatched routes */}
               <Route path="*" element={<Navigate to="/" replace />} />

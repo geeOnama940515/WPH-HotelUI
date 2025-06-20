@@ -82,7 +82,6 @@ function Header() {
               {/* Admin section - only show if user is admin */}
               {user?.isAdmin && (
                 <div className="flex items-center space-x-4 ml-6 pl-6 border-l border-gray-200">
-                  <Link to="/my-bookings" className="nav-link text-sm">My Bookings</Link>
                   <Link to="/profile" className="nav-link text-sm">My Profile</Link>
                   <Link to="/admin" className="nav-link text-sm">Admin</Link>
                   <button onClick={showLogoutConfirmation} className="nav-link text-sm">Logout</button>
@@ -108,7 +107,6 @@ function Header() {
               {/* Admin menu for mobile */}
               {user?.isAdmin && (
                 <div className="pt-4 border-t border-gray-200">
-                  <Link to="/my-bookings" className="nav-link" onClick={() => setIsMenuOpen(false)}>My Bookings</Link>
                   <Link to="/profile" className="nav-link" onClick={() => setIsMenuOpen(false)}>My Profile</Link>
                   <Link to="/admin" className="nav-link" onClick={() => setIsMenuOpen(false)}>Admin</Link>
                   <button onClick={showLogoutConfirmation} className="nav-link text-left">Logout</button>
