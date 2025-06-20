@@ -433,16 +433,33 @@ function BookingsTable({
                     defaultValue={bookingModal.booking.status}
                   >
                     <option value="0">Pending</option>
-                    <option value="1">Confirmed</option>
-                    <option value="2">Cancelled</option>
-                    <option value="3">Checked In</option>
-                    <option value="4">Checked Out</option>
+                    <option value="1">EmailVerificationPending</option>
+                    <option value="2">Confirmed</option>
+                    <option value="3">Cancelled</option>
+                    <option value="4">CheckedIn</option>
+                    <option value="5">CheckedOut</option>
                     <option value="5">Completed</option>
                   </select>
                 </div>
               </div>
 
+
+        {/* Pending,
+        EmailVerificationPending,
+        Confirmed,
+        Cancelled,
+        CheckedIn,
+        CheckedOut,
+        Completed */}
               <div className="flex justify-end mt-6">
+
+                {/* <button
+                  onClick={() => setBookingModal({ isOpen: false, booking: null })}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
+                >
+                  Resend OTP
+                </button> */}
+
                 <button
                   onClick={() => setBookingModal({ isOpen: false, booking: null })}
                   className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"

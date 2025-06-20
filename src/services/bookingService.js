@@ -110,10 +110,10 @@ export const getAllBookings = async () => {
   const response = await api.get('/api/bookings');
   
   // response is already unwrapped by api.js
-  console.log('getAllBookings response (unwrapped):', response);
+  console.log('getAllBookings response (unwrapped):', response.data);
   
   // Check if response is already an array (direct data)
-  if (Array.isArray(response)) {
+  if (Array.isArray(response.data)) {
     return response;
   }
   

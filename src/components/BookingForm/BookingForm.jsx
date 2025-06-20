@@ -84,10 +84,6 @@ function BookingForm({ selectedRoom, onSubmit }) {
       showToast.error('Phone number is required');
       return false;
     }
-    if (!formData.address.trim()) {
-      showToast.error('Address is required');
-      return false;
-    }
     
     // Booking details validation
     if (!formData.roomType) {
@@ -260,6 +256,7 @@ function BookingForm({ selectedRoom, onSubmit }) {
             </label>
             <input
               type="text"
+              required
               value={formData.address}
               onChange={(e) => handleInputChange('address', e.target.value)}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"

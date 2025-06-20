@@ -447,34 +447,46 @@ function Admin() {
     const statusValue = typeof status === 'string' ? status : status.toString();
     
     switch (statusValue) {
-      case 'Confirmed':
-      case '1': return 'bg-green-100 text-green-800';
       case 'Pending':
-      case '0': return 'bg-yellow-100 text-yellow-800';
+      case '0': return 'bg-green-100 text-green-800';
+      case 'EmailVerificationPending':
+      case '1': return 'bg-yellow-100 text-yellow-800';
       case 'Cancelled':
-      case '2': return 'bg-red-100 text-red-800';
+      case '3': return 'bg-red-100 text-red-800';
+      case 'Confirmed':
+      case '2': return 'bg-blue-100 text-blue-800';
       case 'CheckedIn':
-      case '3': return 'bg-blue-100 text-blue-800';
-      case 'CheckedOut':
       case '4': return 'bg-purple-100 text-purple-800';
-      case 'Completed':
+      case 'CheckedOut':
       case '5': return 'bg-gray-100 text-gray-800';
+      case 'Completed':
+      case '6': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
 
   const getBookingStatusText = (status) => {
     // Convert numeric status to text
     switch (status) {
       case 0: return 'Pending';
-      case 1: return 'Confirmed';
-      case 2: return 'Cancelled';
-      case 3: return 'CheckedIn';
-      case 4: return 'CheckedOut';
-      case 5: return 'Completed';
+      case 1: return 'EmailVerificationPending';
+      case 2: return 'Confirmed';
+      case 3: return 'Cancelled';
+      case 4: return 'CheckedIn';
+      case 5: return 'CheckedOut';
+      case 6: return 'Completed';
       default: return 'Unknown';
     }
   };
+
+        //   Pending,
+        // EmailVerificationPending,
+        // Confirmed,
+        // Cancelled,
+        // CheckedIn,
+        // CheckedOut,
+        // Completed
 
   const getRoomStatusColor = (status) => {
     switch (status) {
