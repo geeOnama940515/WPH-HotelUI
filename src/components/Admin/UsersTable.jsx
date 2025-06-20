@@ -37,6 +37,20 @@ function UsersTable({
     }
   };
 
+  const handleRoleChange = async (userId, newRole) => {
+    setProcessingUsers(prev => new Set([...prev, userId]));
+    
+    try {
+      await handleUserRoleChange(userId, newRole);
+    } finally {
+      setProcessingUsers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(userId);
+        return newSet;
+      });
+    }
+  };
+
   const isUserEnabled = (user) => {
     // Check if user is enabled based on roles array
     // If user has roles, they are enabled; if no roles or empty array, they are disabled
@@ -82,7 +96,7 @@ function UsersTable({
                   <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                   <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Phone</th>
                   <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Status</th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -118,23 +132,27 @@ function UsersTable({
                         {user.phoneNumber || 'Not provided'}
                       </td>
                       <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          isAdmin ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {userRole}
-                        </span>
+                        <select
+                          value={userRole}
+                          onChange={(e) => handleRoleChange(user.userId, e.target.value)}
+                          disabled={isProcessing}
+                          className="text-xs px-2 py-1 rounded-md border border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        >
+                          <option value="HotelManager">HotelManager</option>
+                          <option value="Administrator">Administrator</option>
+                        </select>
                       </td>
                       <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center space-x-2">
                           <button
                             onClick={() => handleAccountToggle(user.userId, enabled)}
-                            disabled={isProcessing || isAdmin}
+                            disabled={isProcessing}
                             className={`flex items-center space-x-1 px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                               enabled 
                                 ? 'bg-green-100 text-green-800 hover:bg-green-200' 
                                 : 'bg-red-100 text-red-800 hover:bg-red-200'
-                            } ${(isProcessing || isAdmin) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                            title={isAdmin ? 'Cannot disable administrator accounts' : (enabled ? 'Click to disable account' : 'Click to enable account')}
+                            } ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                            title={enabled ? 'Click to disable account' : 'Click to enable account'}
                           >
                             {isProcessing ? (
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
@@ -159,8 +177,7 @@ function UsersTable({
                           <button
                             onClick={() => handleDeleteUser(user.userId)}
                             className="flex items-center space-x-1 text-red-600 hover:text-red-900 text-sm"
-                            disabled={isAdmin}
-                            title={isAdmin ? 'Cannot delete administrator' : 'Delete user'}
+                            title="Delete user"
                           >
                             <FaTrash className="text-sm" />
                             <span>Delete</span>

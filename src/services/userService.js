@@ -49,7 +49,7 @@ export const getUserById = (userId) => api.get(`/api/users/${userId}`);
  * @param {string} userData.phoneNumber - User's phone number
  * @param {string} userData.password - User's password
  * @param {string} userData.confirmPassword - Password confirmation
- * @param {string} userData.role - User's role (User, Administrator)
+ * @param {string} userData.role - User's role (HotelManager, Administrator)
  * @param {string} userData.status - User's status (Active, Inactive, Suspended)
  * @returns {Promise<Object>} Created user object
  */
@@ -74,13 +74,17 @@ export const deleteUser = (userId) => api.delete(`/api/users/${userId}`);
 
 /**
  * Update user role (admin function)
+ * Uses the correct endpoint: /api/auth/set-role
  * 
  * @param {string} userId - User ID to update
- * @param {string} role - New user role (User, Administrator)
+ * @param {string} roleName - New user role (HotelManager, Administrator)
  * @returns {Promise<Object>} Updated user object
  */
-export const updateUserRole = (userId, role) => 
-  api.put(`/api/users/${userId}/role`, { role });
+export const updateUserRole = (userId, roleName) => 
+  api.post('/api/auth/set-role', { 
+    userId: userId,
+    roleName: roleName
+  });
 
 /**
  * Update user status (admin function)
@@ -94,6 +98,7 @@ export const updateUserStatus = (userId, status) =>
 
 /**
  * Enable user account (admin function)
+ * Uses the correct endpoint: /api/auth/enable-account/{userId}
  * 
  * @param {string} userId - User ID to enable
  * @returns {Promise<Object>} Updated user object
@@ -103,6 +108,7 @@ export const enableUserAccount = (userId) =>
 
 /**
  * Disable user account (admin function)
+ * Uses the correct endpoint: /api/auth/disable-account/{userId}
  * 
  * @param {string} userId - User ID to disable
  * @returns {Promise<Object>} Updated user object

@@ -18,7 +18,7 @@ function UserForm({ user, onSubmit, onCancel }) {
     lastName: '',
     email: '',
     phoneNumber: '',
-    role: 'User',
+    role: 'HotelManager',
     status: 'Active',
     password: '',
     confirmPassword: ''
@@ -36,12 +36,13 @@ function UserForm({ user, onSubmit, onCancel }) {
   // Populate form with existing user data when editing
   useEffect(() => {
     if (user) {
+      const userRole = user.roles && user.roles.length > 0 ? user.roles[0] : 'HotelManager';
       setFormData({
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         email: user.email || '',
         phoneNumber: user.phoneNumber || '',
-        role: user.role || 'User',
+        role: userRole,
         status: user.status || 'Active',
         password: '',
         confirmPassword: ''
@@ -144,7 +145,7 @@ function UserForm({ user, onSubmit, onCancel }) {
       
       if (user) {
         // Update existing user
-        result = await updateUser(user.id, saveModal.formData);
+        result = await updateUser(user.userId, saveModal.formData);
         showToast.success('User updated successfully');
       } else {
         // Create new user
@@ -248,7 +249,7 @@ function UserForm({ user, onSubmit, onCancel }) {
             required
             disabled={isSubmitting}
           >
-            <option value="User">User</option>
+            <option value="HotelManager">HotelManager</option>
             <option value="Administrator">Administrator</option>
           </select>
         </div>
