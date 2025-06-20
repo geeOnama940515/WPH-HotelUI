@@ -68,6 +68,16 @@ export const resendBookingOtp = (bookingId, emailAddress) => {
 };
 
 /**
+ * Cancel a booking
+ * 
+ * @param {string} bookingId - Booking ID to cancel
+ * @returns {Promise<Object>} Cancellation result
+ */
+export const cancelBooking = (bookingId) => {
+  return api.delete(`/api/bookings/${bookingId}/cancel`);
+};
+
+/**
  * Get all bookings for the current user
  * 
  * @returns {Promise<Array>} Array of user's bookings

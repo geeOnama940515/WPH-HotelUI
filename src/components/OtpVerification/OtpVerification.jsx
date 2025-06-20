@@ -1,18 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { FaEnvelope, FaLock, FaSpinner } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaSpinner, FaTimes } from 'react-icons/fa';
 import { showToast } from '../../utils/notifications';
 
 /**
  * OtpVerification component for email verification during booking
- * Handles OTP input, verification, and resend functionality
+ * Handles OTP input, verification, resend functionality, and booking cancellation
  * 
  * @param {string} bookingId - The booking ID from the initial booking creation
  * @param {string} emailAddress - Email address where OTP was sent
  * @param {Function} onVerified - Callback when OTP is successfully verified
  * @param {Function} onCancel - Callback when user cancels verification
  * @param {Function} onResendOtp - Callback to resend OTP
+ * @param {Function} onCancelBooking - Callback to cancel the booking
+ * @param {boolean} isCancellingBooking - Loading state for booking cancellation
  */
-function OtpVerification({ bookingId, emailAddress, onVerified, onCancel, onResendOtp }) {
+function OtpVerification({ 
+  bookingId, 
+  emailAddress, 
+  onVerified, 
+  onCancel, 
+  onResendOtp, 
+  onCancelBooking,
+  isCancellingBooking = false 
+}) {
   const [otpCode, setOtpCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -92,6 +102,23 @@ function OtpVerification({ bookingId, emailAddress, onVerified, onCancel, onRese
   };
 
   /**
+   * Handle booking cancellation
+   */
+  const handleCancelBooking = async () => {
+    try {
+      if (onCancelBooking) {
+        await onCancelBooking(bookingId);
+      } else {
+        // Fallback to the onCancel prop
+        onCancel();
+      }
+    } catch (error) {
+      console.error('Failed to cancel booking:', error);
+      showToast.error(error.message || 'Failed to cancel booking. Please try again.');
+    }
+  };
+
+  /**
    * Format countdown time as MM:SS
    */
   const formatCountdown = (seconds) => {
@@ -127,7 +154,7 @@ function OtpVerification({ bookingId, emailAddress, onVerified, onCancel, onRese
             placeholder="000000"
             className="w-full text-center text-2xl font-mono tracking-widest rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3"
             maxLength={6}
-            disabled={isVerifying}
+            disabled={isVerifying || isCancellingBooking}
             autoComplete="one-time-code"
             autoFocus
           />
@@ -140,7 +167,7 @@ function OtpVerification({ bookingId, emailAddress, onVerified, onCancel, onRese
         <div className="space-y-3">
           <button
             type="submit"
-            disabled={isVerifying || otpCode.length !== 6}
+            disabled={isVerifying || otpCode.length !== 6 || isCancellingBooking}
             className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isVerifying ? (
@@ -157,7 +184,7 @@ function OtpVerification({ bookingId, emailAddress, onVerified, onCancel, onRese
             <button
               type="button"
               onClick={handleResendOtp}
-              disabled={isResending || countdown > 0}
+              disabled={isResending || countdown > 0 || isCancellingBooking}
               className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isResending ? (
@@ -174,10 +201,21 @@ function OtpVerification({ bookingId, emailAddress, onVerified, onCancel, onRese
 
             <button
               type="button"
-              onClick={onCancel}
-              className="flex-1 bg-red-100 text-red-800 py-2 px-4 rounded-md hover:bg-red-200 transition-colors font-medium"
+              onClick={handleCancelBooking}
+              disabled={isCancellingBooking}
+              className="flex-1 bg-red-100 text-red-800 py-2 px-4 rounded-md hover:bg-red-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Cancel Booking
+              {isCancellingBooking ? (
+                <div className="flex items-center justify-center">
+                  <FaSpinner className="animate-spin mr-2" />
+                  Cancelling...
+                </div>
+              ) : (
+                <div className="flex items-center justify-center">
+                  <FaTimes className="mr-2" />
+                  Cancel Booking
+                </div>
+              )}
             </button>
           </div>
         </div>
@@ -191,6 +229,13 @@ function OtpVerification({ bookingId, emailAddress, onVerified, onCancel, onRese
         <p className="text-xs text-gray-400 mt-2">
           Booking ID: {bookingId}
         </p>
+        
+        {/* Warning about cancellation */}
+        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+          <p className="text-xs text-yellow-800">
+            ⚠️ If you cancel this booking, you'll need to start the booking process over again.
+          </p>
+        </div>
       </div>
     </div>
   );

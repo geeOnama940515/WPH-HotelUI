@@ -4,7 +4,7 @@ import BookingForm from '../../components/BookingForm/BookingForm';
 import BookingSummary from '../../components/BookingSummary/BookingSummary';
 import OtpVerification from '../../components/OtpVerification/OtpVerification';
 import { getRooms } from '../../services/roomService';
-import { createBooking, verifyBookingOtp, resendBookingOtp } from '../../services/bookingService';
+import { createBooking, verifyBookingOtp, resendBookingOtp, cancelBooking } from '../../services/bookingService';
 import { showToast } from '../../utils/notifications';
 
 function Booking() {
@@ -21,6 +21,7 @@ function Booking() {
   // OTP verification state
   const [pendingBookingId, setPendingBookingId] = useState(null);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isCancellingBooking, setIsCancellingBooking] = useState(false);
   
   const navigate = useNavigate();
 
@@ -125,13 +126,51 @@ function Booking() {
   };
 
   /**
+   * Handle booking cancellation during OTP verification
+   */
+  const handleCancelBooking = async (bookingId) => {
+    setIsCancellingBooking(true);
+    
+    try {
+      const result = await cancelBooking(bookingId);
+      console.log('Booking cancelled successfully:', result);
+      
+      showToast.success('Booking cancelled successfully.');
+      
+      // Reset to booking form
+      setCurrentStep(1);
+      setPendingBookingId(null);
+      
+      return result;
+    } catch (error) {
+      console.error('Failed to cancel booking:', error);
+      showToast.error(error.message || 'Failed to cancel booking. Please try again.');
+      throw error;
+    } finally {
+      setIsCancellingBooking(false);
+    }
+  };
+
+  /**
    * Handle OTP verification cancellation
    */
-  const handleCancelOtpVerification = () => {
-    // Reset to booking form
-    setCurrentStep(1);
-    setPendingBookingId(null);
-    showToast.info('Booking cancelled. You can start over if needed.');
+  const handleCancelOtpVerification = async () => {
+    if (pendingBookingId) {
+      try {
+        await handleCancelBooking(pendingBookingId);
+      } catch (error) {
+        // Even if cancellation fails, reset the form
+        console.error('Cancellation failed, but resetting form anyway:', error);
+        setCurrentStep(1);
+        setPendingBookingId(null);
+        showToast.info('Booking process cancelled. You can start over if needed.');
+      }
+    } else {
+      // No booking ID, just reset
+      setCurrentStep(1);
+      setPendingBookingId(null);
+      showToast.info('Booking process cancelled. You can start over if needed.');
+    }
   };
 
   const handleBackToForm = () => {
@@ -199,6 +238,8 @@ function Booking() {
             onVerified={handleOtpVerification}
             onCancel={handleCancelOtpVerification}
             onResendOtp={handleResendOtp}
+            onCancelBooking={handleCancelBooking}
+            isCancellingBooking={isCancellingBooking}
           />
         );
       case 4:
