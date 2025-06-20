@@ -74,7 +74,7 @@ export const resendBookingOtp = (bookingId, emailAddress) => {
  * @returns {Promise<Object>} Cancellation result
  */
 export const cancelBooking = (bookingId) => {
-  return api.delete(`/api/bookings/${bookingId}/cancel`);
+  return api.put(`/api/bookings/${bookingId}/cancel`, {});
 };
 
 /**
