@@ -11,8 +11,16 @@ import { getRooms } from '../../services/roomService';
  * @param {Function} onBack - Callback to go back to form
  * @param {boolean} isViewOnly - If true, shows contact info instead of action buttons
  * @param {boolean} isConfirming - If true, shows loading state on confirm button
+ * @param {Function} onOtpRequired - Callback when OTP verification is needed
  */
-function BookingSummary({ bookingData, onConfirm, onBack, isViewOnly = false, isConfirming = false }) {
+function BookingSummary({ 
+  bookingData, 
+  onConfirm, 
+  onBack, 
+  isViewOnly = false, 
+  isConfirming = false,
+  onOtpRequired 
+}) {
   const [rooms, setRooms] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -108,6 +116,18 @@ function BookingSummary({ bookingData, onConfirm, onBack, isViewOnly = false, is
       </div>
     );
   }
+
+  const handleConfirmBooking = () => {
+    const finalBookingData = { ...bookingData, totalAmount: total };
+    
+    if (onOtpRequired) {
+      // Trigger OTP verification flow
+      onOtpRequired(finalBookingData);
+    } else {
+      // Fallback to direct confirmation
+      onConfirm(finalBookingData);
+    }
+  };
 
   return (
     <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md">
@@ -207,7 +227,7 @@ function BookingSummary({ bookingData, onConfirm, onBack, isViewOnly = false, is
               Back to Edit
             </button>
             <button
-              onClick={() => onConfirm({ ...bookingData, totalAmount: total })}
+              onClick={handleConfirmBooking}
               className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors font-semibold"
               disabled={isConfirming}
             >

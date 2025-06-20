@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import BookingForm from '../../components/BookingForm/BookingForm';
 import BookingSummary from '../../components/BookingSummary/BookingSummary';
+import OtpVerification from '../../components/OtpVerification/OtpVerification';
 import { getRooms } from '../../services/roomService';
-import { createBooking } from '../../services/bookingService';
+import { createBooking, verifyBookingOtp, resendBookingOtp } from '../../services/bookingService';
 import { showToast } from '../../utils/notifications';
 
 function Booking() {
@@ -16,6 +17,11 @@ function Booking() {
   const [loading, setLoading] = useState(false);
   const [confirmingBooking, setConfirmingBooking] = useState(false);
   const [error, setError] = useState('');
+  
+  // OTP verification state
+  const [pendingBookingId, setPendingBookingId] = useState(null);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  
   const navigate = useNavigate();
 
   // Load rooms from API
@@ -56,20 +62,76 @@ function Booking() {
     setCurrentStep(2);
   };
 
-  const handleConfirmBooking = async (finalBookingData) => {
+  /**
+   * Handle initial booking creation (triggers OTP)
+   */
+  const handleInitialBooking = async (finalBookingData) => {
+    setConfirmingBooking(true);
+    
     try {
-      // Make API call to create the booking
-      setConfirmingBooking(true);
       const result = await createBooking(finalBookingData);
-      console.log('Booking created successfully:', result);
-      showToast.success('Booking confirmed successfully!');
-      setCurrentStep(3);
+      console.log('Initial booking created:', result);
+      
+      // Extract booking ID from response
+      const bookingId = result.bookingId || result.id || result.data?.bookingId || result.data?.id;
+      
+      if (!bookingId) {
+        throw new Error('Booking ID not received from server');
+      }
+      
+      setPendingBookingId(bookingId);
+      setCurrentStep(3); // Move to OTP verification step
+      showToast.success('Booking created! Please check your email for the verification code.');
     } catch (error) {
-      console.error('Booking failed:', error);
+      console.error('Initial booking failed:', error);
       showToast.error(error.message || 'Failed to create booking. Please try again.');
     } finally {
       setConfirmingBooking(false);
     }
+  };
+
+  /**
+   * Handle OTP verification
+   */
+  const handleOtpVerification = async (bookingId, otpCode) => {
+    setIsVerifyingOtp(true);
+    
+    try {
+      const result = await verifyBookingOtp(bookingId, otpCode);
+      console.log('OTP verification successful:', result);
+      
+      showToast.success('Email verified! Your booking is now confirmed.');
+      setCurrentStep(4); // Move to final confirmation step
+    } catch (error) {
+      console.error('OTP verification failed:', error);
+      throw error; // Re-throw to be handled by OtpVerification component
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  /**
+   * Handle OTP resend
+   */
+  const handleResendOtp = async (bookingId, emailAddress) => {
+    try {
+      const result = await resendBookingOtp(bookingId, emailAddress);
+      console.log('OTP resent successfully:', result);
+      return result;
+    } catch (error) {
+      console.error('Failed to resend OTP:', error);
+      throw error; // Re-throw to be handled by OtpVerification component
+    }
+  };
+
+  /**
+   * Handle OTP verification cancellation
+   */
+  const handleCancelOtpVerification = () => {
+    // Reset to booking form
+    setCurrentStep(1);
+    setPendingBookingId(null);
+    showToast.info('Booking cancelled. You can start over if needed.');
   };
 
   const handleBackToForm = () => {
@@ -97,6 +159,13 @@ function Booking() {
           <span className={`w-6 h-6 lg:w-8 lg:h-8 rounded-full border-2 flex items-center justify-center mr-2 text-sm lg:text-base ${
             currentStep >= 3 ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-300'
           }`}>3</span>
+          <span className="font-medium text-sm lg:text-base">Email Verification</span>
+        </div>
+        <div className="w-8 lg:w-16 h-0.5 bg-gray-300" />
+        <div className={`flex items-center ${currentStep >= 4 ? 'text-blue-600' : 'text-gray-400'} whitespace-nowrap`}>
+          <span className={`w-6 h-6 lg:w-8 lg:h-8 rounded-full border-2 flex items-center justify-center mr-2 text-sm lg:text-base ${
+            currentStep >= 4 ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-300'
+          }`}>4</span>
           <span className="font-medium text-sm lg:text-base">Confirmation</span>
         </div>
       </div>
@@ -116,23 +185,39 @@ function Booking() {
         return (
           <BookingSummary 
             bookingData={bookingData}
-            onConfirm={handleConfirmBooking}
+            onConfirm={handleInitialBooking}
             onBack={handleBackToForm}
             isConfirming={confirmingBooking}
+            onOtpRequired={handleInitialBooking}
           />
         );
       case 3:
+        return (
+          <OtpVerification
+            bookingId={pendingBookingId}
+            emailAddress={bookingData?.emailAddress}
+            onVerified={handleOtpVerification}
+            onCancel={handleCancelOtpVerification}
+            onResendOtp={handleResendOtp}
+          />
+        );
+      case 4:
         return (
           <div className="bg-white p-6 lg:p-8 rounded-lg shadow-md text-center">
             <div className="text-green-600 text-4xl lg:text-6xl mb-6">✓</div>
             <h2 className="text-2xl lg:text-3xl font-bold mb-4 text-green-600">Booking Confirmed!</h2>
             <p className="text-base lg:text-lg text-gray-600 mb-6">
-              Thank you for choosing WPH Hotel. Your booking has been successfully confirmed.
+              Thank you for choosing WPH Hotel. Your booking has been successfully confirmed and verified.
             </p>
             <div className="bg-gray-50 p-4 rounded-lg mb-6">
               <p className="text-sm text-gray-600">
                 A confirmation email has been sent to <strong>{bookingData?.emailAddress}</strong>
               </p>
+              {pendingBookingId && (
+                <p className="text-xs text-gray-500 mt-2">
+                  Booking ID: {pendingBookingId}
+                </p>
+              )}
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button

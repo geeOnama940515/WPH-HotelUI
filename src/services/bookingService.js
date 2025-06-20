@@ -19,7 +19,7 @@ import { api } from './api';
  * @param {number} bookingData.numberOfGuests - Number of guests
  * @param {number} bookingData.totalAmount - Total booking amount
  * @param {string} bookingData.specialRequests - Special requests (optional)
- * @returns {Promise<Object>} Created booking object
+ * @returns {Promise<Object>} Created booking object with bookingId
  */
 export const createBooking = (bookingData) => {
   // Transform the data to match backend API requirements
@@ -37,6 +37,34 @@ export const createBooking = (bookingData) => {
   };
 
   return api.post('/api/bookings', apiData);
+};
+
+/**
+ * Verify OTP for booking confirmation
+ * 
+ * @param {string} bookingId - Booking ID from the initial booking creation
+ * @param {string} otpCode - 6-digit OTP code entered by user
+ * @returns {Promise<Object>} Verification result
+ */
+export const verifyBookingOtp = (bookingId, otpCode) => {
+  return api.post('/api/bookings/verify-otp', {
+    bookingId: bookingId,
+    otpCode: otpCode
+  });
+};
+
+/**
+ * Resend OTP for booking verification
+ * 
+ * @param {string} bookingId - Booking ID from the initial booking creation
+ * @param {string} emailAddress - Email address to send OTP to
+ * @returns {Promise<Object>} Resend result
+ */
+export const resendBookingOtp = (bookingId, emailAddress) => {
+  return api.post('/api/bookings/resend-otp', {
+    bookingId: bookingId,
+    emailAddress: emailAddress
+  });
 };
 
 /**
