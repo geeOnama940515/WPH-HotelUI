@@ -77,7 +77,9 @@ The WPH Hotel Booking System is a full-featured web application designed for hot
 ### Deployment & Containerization
 - **Docker** - Containerization for consistent deployment
 - **Docker Compose** - Multi-container application orchestration
-- **Netlify** - Frontend deployment platform
+- **Portainer** - Container management interface
+- **Nginx Proxy Manager (NPM)** - Reverse proxy and SSL management
+- **Cloudflare Tunnel** - Secure tunnel for external access
 
 ## Project Structure
 
@@ -172,15 +174,52 @@ For production deployment using Docker:
    docker-compose up -d
    ```
 
-The application will be available at `http://localhost:4173`
+The application will be available at `http://localhost:4174`
 
-### Environment Configuration
+### Production Deployment Process
+
+This project is deployed using a comprehensive containerized setup:
+
+#### 1. Docker Containerization
+- **Dockerfile**: Multi-stage build using Node.js 18 Alpine
+- **Docker Compose**: Orchestrates the application container
+- **Port**: Application runs on port 4174
+
+#### 2. Portainer Stack Deployment
+1. **Create Stack in Portainer:**
+   - Navigate to Portainer dashboard
+   - Go to "Stacks" section
+   - Click "Add stack"
+   - Choose "Repository" method
+   - Provide repository URL and branch
+   - Deploy the stack
+
+#### 3. Nginx Proxy Manager (NPM) Configuration
+1. **Add Proxy Host:**
+   - Domain: `wph-hotel.gregdoesdev.xyz`
+   - Scheme: `http`
+   - Forward Hostname/IP: `localhost` (or container IP)
+   - Forward Port: `4174`
+   - Enable SSL certificate (Let's Encrypt)
+   - Configure redirects if needed
+
+#### 4. Cloudflare Tunnel Setup
+1. **Create Tunnel:**
+   - Install Cloudflare Tunnel client
+   - Create tunnel in Cloudflare dashboard
+   - Configure tunnel to point to local NPM instance
+   - Set up DNS records to route traffic through tunnel
+
+#### 5. Environment Configuration
 
 Create a `.env` file in the root directory for environment variables:
 
 ```env
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_API_URL=https://wph-backend.gregdoesdev.xyz
+VITE_DEV_MODE=false
+VITE_ENABLE_API_LOGGING=false
 ```
 
 ### Admin Access
@@ -198,89 +237,73 @@ To access the admin dashboard:
 - **Purpose**: Allows guests to view their booking details via email links
 - **Features**:
   - No authentication required
-  - Displays complete booking information
+  - Secure token-based access
+  - Complete booking information display
   - Contact information for support
-  - Responsive design for all devices
 
-### 🆕 Enhanced Booking Status Management
-- **6 Status Types**: Pending, Confirmed, Cancelled, Checked In, Checked Out, Completed
-- **Real-time Updates**: Status changes are immediately reflected in the UI
-- **API Integration**: Full backend integration with proper error handling
-- **Visual Indicators**: Color-coded status badges for easy identification
+### 🆕 Enhanced Admin Dashboard
+- **Real-time Analytics**: Revenue tracking, booking trends, occupancy rates
+- **Advanced Booking Management**: Status updates, date modifications, pagination
+- **Comprehensive User Management**: Role-based access control, account status management
+- **Visual Data Representation**: Progress bars, status indicators, growth metrics
 
-### 🆕 Admin Booking Management Improvements
-- **Pagination**: 10 bookings per page for better performance
-- **Status Filtering**: Filter bookings by any status
-- **Advanced Search**: Search by guest name or room name
-- **Date Range Filtering**: Filter by check-in/check-out dates
-- **Clear Filters**: One-click filter reset
-- **Results Counter**: Shows "X to Y of Z results"
+### 🆕 Improved Booking Flow
+- **Multi-step Process**: Form → Review → OTP Verification → Confirmation
+- **Email Verification**: Secure OTP-based booking confirmation
+- **Real-time Availability**: Check room availability before booking
+- **Cost Calculation**: Automatic tax and service charge calculations
 
-### 🆕 Enhanced User Experience
-- **Loading States**: Visual feedback during API calls
-- **Toast Notifications**: Success/error messages throughout the app
-- **Route Protection**: Automatic redirects for invalid URLs
-- **Booking Confirmation**: Loading state during booking submission
-- **Contact Integration**: Direct links to contact page from booking summary
+## Compliance with Requirements
 
-### 🆕 API Enhancements
-- **Booking Status Updates**: `PUT /api/booking/{id}/status`
-- **Public Booking View**: `GET /api/booking/view/{token}`
-- **Enhanced Error Handling**: Proper validation and user feedback
-- **Type Safety**: Integer-based status values for backend compatibility
+This project fully complies with all mandatory requirements:
 
-## Admin Dashboard Features
+✅ **User Authentication and Registration**
+- Secure login/registration system
+- JWT-based authentication
+- Role-based access control (Admin/User)
 
-The admin dashboard includes:
+✅ **Responsive Design**
+- Mobile-first approach with Tailwind CSS
+- Responsive navigation and components
+- Optimized for all screen sizes
 
-### Dashboard Overview
-- **Revenue Analytics**: Total and monthly revenue tracking with growth indicators
-- **Booking Statistics**: Total bookings, monthly bookings, and trends
-- **Occupancy Metrics**: Real-time occupancy rate and average stay duration
-- **Room Status**: Visual overview of available, occupied, and maintenance rooms
-- **Recent Bookings**: Quick access to latest booking information
-- **Monthly Trends**: Revenue and booking trends with visual progress bars
+✅ **Home Page**
+- Welcome banner with hotel branding
+- Navigation bar (Home, Rooms, Book Now, Contact)
+- Professional hotel presentation
 
-### Enhanced Booking Management
-- **Comprehensive Booking Table**:
-  - Pagination (10 bookings per page)
-  - Status filtering dropdown
-  - Search functionality
-  - Date range filtering
-  - Clear filters option
-  - Results counter
-- **Booking Details Modal**:
-  - Complete guest information
-  - Booking details and costs
-  - Special requests display
-  - Status update dropdown
-  - Real-time status changes
-- **Status Management**:
-  - 6 different booking statuses
-  - Color-coded status indicators
-  - API-integrated status updates
-  - Success/error notifications
+✅ **Room Listings**
+- Complete room information display
+- Room name/type, description, price, amenities
+- Availability status
+- Image galleries
 
-### Room Management
-- Add, edit, and delete rooms
-- Update room status (available, occupied, maintenance)
-- Manage room pricing and capacity
-- Upload and manage room images
+✅ **Filter/Search Functionality**
+- Price range filtering
+- Capacity filtering
+- Sorting options (price, capacity)
+- Real-time filtering
 
-## API Endpoints
+✅ **Booking Page**
+- Comprehensive booking form with all required fields:
+  - Guest Full Name
+  - Email Address
+  - Phone Number
+  - Room type selection
+  - Check-in and Check-out dates
+- Cost calculation based on dates and room type
+- Multi-step booking process
 
-### Booking Management
-- `GET /api/booking` - Get all bookings (admin)
-- `POST /api/booking` - Create new booking
-- `PUT /api/booking/{id}/status` - Update booking status
-- `GET /api/booking/view/{token}` - Get booking by public token
+✅ **Booking Summary**
+- Complete confirmation with guest and booking details
+- Total cost breakdown (room rate, tax, service charge)
+- Booking confirmation system
 
-### Room Management
-- `GET /api/room` - Get all rooms
-- `POST /api/room` - Create new room
-- `PUT /api/room/{id}` - Update room
-- `DELETE /api/room/{id}` - Delete room
-- `PUT /api/room/{id}/status` - Update room status
+✅ **Admin Page**
+- Complete booking management interface
+- View all bookings with details
+- User and room management
+- Advanced analytics dashboard
 
 ## Contributing
 
@@ -292,7 +315,7 @@ The admin dashboard includes:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Support
 
