@@ -31,7 +31,7 @@ function Contact() {
         subject: formData.subject,
         message: formData.message
       };
-      await api.post('/api/contactmessage', payload);
+      await api.post('/api/contactmessages', payload);
       setIsSubmitted(true);
       // Reset form after 3 seconds
       setTimeout(() => {
